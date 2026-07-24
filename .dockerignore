@@ -1,0 +1,16 @@
+node_modules
+.nuxt
+.output
+.nitro
+.cache
+dist
+.git
+.env
+.env.*
+!.env.example
+tests
+playwright-report
+test-results
+coverage
+*.log
+.DS_Store

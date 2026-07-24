@@ -1,10 +1,42 @@
 <script setup lang="ts">
+import { useFloorsApi } from '../composables/useFloorsApi'
 import { useHomesApi } from '../composables/useHomesApi'
+import { useRoomsApi } from '../composables/useRoomsApi'
 
 const route = useRoute()
 const homesApi = useHomesApi()
+const floorsApi = useFloorsApi()
+const roomsApi = useRoomsApi()
 
-const { data: homes } = await useAsyncData('sidebar-homes', () => homesApi.list())
+const activeHomeId = computed(() => {
+  const id = route.params.homeId
+  return typeof id === 'string' ? id : null
+})
+
+// Reactive keys matching the home page's useAsyncData keys so the sidebar
+// shares the same cached data and updates live when floors/rooms change there.
+const { data: activeHome } = await useAsyncData(
+  () => `home-${activeHomeId.value}`,
+  () => (activeHomeId.value ? homesApi.get(activeHomeId.value) : Promise.resolve(null))
+)
+
+const { data: floors } = await useAsyncData(
+  () => `floors-${activeHomeId.value}`,
+  () => (activeHomeId.value ? floorsApi.list(activeHomeId.value) : Promise.resolve([]))
+)
+
+const { data: rooms } = await useAsyncData(
+  () => `rooms-${activeHomeId.value}`,
+  () => (activeHomeId.value ? roomsApi.listForHome(activeHomeId.value) : Promise.resolve([]))
+)
+
+const floorsWithRooms = computed(() => {
+  if (!floors.value) return []
+  return floors.value.map((floor) => ({
+    ...floor,
+    rooms: (rooms.value ?? []).filter((room) => room.floorId === floor.id)
+  }))
+})
 
 const sidebarOpen = ref(false)
 
@@ -19,8 +51,12 @@ watch(
   }
 )
 
-function isActiveHome(homeId: string) {
-  return route.path.startsWith(`/homes/${homeId}`)
+function isActiveHomeOverview() {
+  return !!activeHomeId.value && route.path === `/homes/${activeHomeId.value}`
+}
+
+function isActiveRoom(roomId: string) {
+  return route.path === `/homes/${activeHomeId.value}/devices` && route.query.roomId === roomId
 }
 </script>
 
@@ -43,24 +79,42 @@ function isActiveHome(homeId: string) {
         </NuxtLink>
       </nav>
 
-      <div class="stack" style="gap: var(--space-1)">
-        <p class="app-nav-section-label">Homes</p>
+      <div v-if="activeHomeId && activeHome" class="stack" style="gap: var(--space-1)">
+        <p class="app-nav-section-label">Current home</p>
         <nav class="stack" style="gap: var(--space-1)">
           <NuxtLink
-            v-for="home in homes"
-            :key="home.id"
-            :to="`/homes/${home.id}`"
+            :to="`/homes/${activeHomeId}`"
             class="app-nav-link"
-            :class="{ 'is-active': isActiveHome(home.id) }"
+            :class="{ 'is-active': isActiveHomeOverview() }"
           >
             <span class="app-home-dot" aria-hidden="true" />
             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
-              {{ home.name }}
+              {{ activeHome.name }}
             </span>
           </NuxtLink>
-          <p v-if="homes && homes.length === 0" class="hint" style="padding-inline: var(--space-3)">
-            No homes yet.
+
+          <p v-if="floorsWithRooms.length === 0" class="hint" style="padding-inline: var(--space-5)">
+            No floors yet.
           </p>
+
+          <div v-for="floor in floorsWithRooms" :key="floor.id" class="stack" style="gap: var(--space-1)">
+            <p class="app-nav-section-label" style="padding-left: var(--space-5)">
+              {{ floor.name }}
+            </p>
+            <NuxtLink
+              v-for="room in floor.rooms"
+              :key="room.id"
+              :to="`/homes/${activeHomeId}/devices?roomId=${room.id}`"
+              class="app-nav-link"
+              style="padding-left: var(--space-6)"
+              :class="{ 'is-active': isActiveRoom(room.id) }"
+            >
+              {{ room.name }}
+            </NuxtLink>
+            <p v-if="floor.rooms.length === 0" class="hint" style="padding-inline: var(--space-6)">
+              No rooms yet.
+            </p>
+          </div>
         </nav>
       </div>
     </aside>

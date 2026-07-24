@@ -11,7 +11,7 @@ test('moves a device between all three location states', async ({ page, request 
   })
 
   await page.goto(`/homes/${home.id}/devices/${device.id}`)
-  await expect(page.getByText('Unassigned')).toBeVisible()
+  await expect(page.getByText('Unassigned', { exact: true })).toBeVisible()
 
   // Unassigned -> In storage
   await page.getByRole('button', { name: 'Edit' }).click()
@@ -30,5 +30,5 @@ test('moves a device between all three location states', async ({ page, request 
   await page.getByRole('button', { name: 'Edit' }).click()
   await page.getByLabel('Unassigned').check()
   await page.getByRole('button', { name: 'Save device' }).click()
-  await expect(page.getByText('Unassigned')).toBeVisible()
+  await expect(page.getByText('Unassigned', { exact: true })).toBeVisible()
 })

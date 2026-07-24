@@ -19,6 +19,19 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return typeof value === 'object' && value !== null && 'error' in value
 }
 
+function rethrowAsApiError(error: unknown): never {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'data' in error &&
+    isApiErrorBody((error as { data: unknown }).data)
+  ) {
+    const status = 'statusCode' in error ? Number((error as { statusCode: unknown }).statusCode) : 500
+    throw new ApiRequestError((error as { data: ApiErrorBody }).data.error, status)
+  }
+  throw error
+}
+
 interface RequestOptions {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   query?: Record<string, unknown>
@@ -35,16 +48,7 @@ async function request<T>(url: string, options: RequestOptions): Promise<T> {
     })
     return response as T
   } catch (error) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'data' in error &&
-      isApiErrorBody((error as { data: unknown }).data)
-    ) {
-      const status = 'statusCode' in error ? Number((error as { statusCode: unknown }).statusCode) : 500
-      throw new ApiRequestError((error as { data: ApiErrorBody }).data.error, status)
-    }
-    throw error
+    rethrowAsApiError(error)
   }
 }
 
@@ -66,4 +70,17 @@ export function apiPatch<T>(url: string, body?: unknown): Promise<ApiSuccessResp
 
 export async function apiDelete(url: string, body?: unknown): Promise<void> {
   await request<unknown>(url, { method: 'DELETE', body })
+}
+
+/**
+ * Uploads a FormData payload (e.g. a file). Deliberately does not set a
+ * Content-Type header — the browser must set its own multipart boundary.
+ */
+export async function apiUpload<T>(url: string, formData: FormData): Promise<ApiSuccessResponse<T>> {
+  try {
+    const response = await $fetch(url, { method: 'POST', body: formData })
+    return response as ApiSuccessResponse<T>
+  } catch (error) {
+    rethrowAsApiError(error)
+  }
 }

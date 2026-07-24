@@ -28,5 +28,5 @@ test('creates an unassigned device', async ({ page, request }) => {
   await page.getByRole('button', { name: 'Save device' }).click()
 
   await expect(page.getByRole('heading', { name: deviceName })).toBeVisible()
-  await expect(page.getByText('Unassigned')).toBeVisible()
+  await expect(page.getByText('Unassigned', { exact: true })).toBeVisible()
 })

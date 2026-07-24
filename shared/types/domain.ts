@@ -70,4 +70,19 @@ export interface FloorWithRooms extends FloorDto {
   rooms: RoomDto[]
 }
 
+export interface DeviceImportRowResult {
+  row: number
+  status: 'created' | 'error'
+  device?: DeviceDto
+  error?: string
+  fieldErrors?: Record<string, string[]>
+}
+
+export interface DeviceImportSummary {
+  totalRows: number
+  created: number
+  failed: number
+  results: DeviceImportRowResult[]
+}
+
 export type { DeviceLocationState }

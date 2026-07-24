@@ -30,5 +30,5 @@ test('deleting a room unassigns its devices', async ({ page, request }) => {
   await expect(page.getByRole('link', { name: 'Kitchen' })).not.toBeVisible()
 
   await page.goto(`/homes/${home.id}/devices/${device.id}`)
-  await expect(page.getByText('Unassigned')).toBeVisible()
+  await expect(page.getByText('Unassigned', { exact: true })).toBeVisible()
 })

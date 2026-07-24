@@ -108,7 +108,7 @@ const queryKey = computed(() =>
   JSON.stringify({ ...filters, sort: sort.value, order: order.value, page: page.value })
 )
 
-const { data: result, pending } = await useAsyncData(
+const { data: result, pending, refresh: refreshDevices } = await useAsyncData(
   `inv-devices-${homeId}`,
   () =>
     devicesApi.list(homeId, {
@@ -126,6 +126,12 @@ const { data: result, pending } = await useAsyncData(
     }),
   { watch: [queryKey] }
 )
+
+const showImportDialog = ref(false)
+
+function onImported() {
+  refreshDevices()
+}
 
 const sortLabels: Record<DeviceSortField, string> = {
   name: 'Name',
@@ -148,7 +154,10 @@ function ariaSortFor(field: DeviceSortField): 'ascending' | 'descending' | 'none
         <NuxtLink :to="`/homes/${homeId}`">← Back to home</NuxtLink>
         <h1>Device inventory</h1>
       </div>
-      <NuxtLink :to="`/homes/${homeId}/devices/new`" class="btn btn-primary">Add device</NuxtLink>
+      <div class="row">
+        <button type="button" class="btn" @click="showImportDialog = true">Import CSV</button>
+        <NuxtLink :to="`/homes/${homeId}/devices/new`" class="btn btn-primary">Add device</NuxtLink>
+      </div>
     </div>
 
     <DeviceFilters
@@ -261,5 +270,12 @@ function ariaSortFor(field: DeviceSortField): 'ascending' | 'descending' | 'none
         </button>
       </nav>
     </template>
+
+    <DeviceImportDialog
+      v-if="showImportDialog"
+      :home-id="homeId"
+      @imported="onImported"
+      @cancel="showImportDialog = false"
+    />
   </div>
 </template>

@@ -1,6 +1,8 @@
 # WhatHome
 
-A self-hosted home device inventory application. Track devices across one or more homes, organized by floor and room, with search and filtering. See `SPEC.md` for the full product specification.
+A self-hosted home device inventory application. Track devices across one or more homes, organized by floor and room, with search, filtering, and CSV import. See `SPEC.md` for the full product specification.
+
+Devices can be bulk-created from a CSV file on the inventory page ("Import CSV"). The dialog shows the required and optional columns, offers a template download, and matches headers flexibly (case/spacing-insensitive, with common aliases like "Brand" for Manufacturer). Each row is validated independently, so a file with some invalid rows still imports the valid ones and reports exactly what's wrong with the rest.
 
 ## ⚠️ Security warning
 

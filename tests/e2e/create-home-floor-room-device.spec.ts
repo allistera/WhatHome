@@ -20,12 +20,12 @@ test('creates a home, floor, room, and a room-assigned device', async ({ page })
   await page.getByLabel('Floor name').fill(floorName)
   await page.getByRole('button', { name: 'Add floor' }).last().click()
 
-  await expect(page.getByText(floorName)).toBeVisible()
+  await expect(page.locator('#main-content').getByText(floorName)).toBeVisible()
   await page.getByRole('button', { name: 'Add room' }).click()
   await page.getByLabel('Room name').fill(roomName)
   await page.getByRole('button', { name: 'Add room' }).last().click()
 
-  await expect(page.getByRole('link', { name: roomName })).toBeVisible()
+  await expect(page.locator('#main-content').getByRole('link', { name: roomName })).toBeVisible()
 
   await page.getByRole('link', { name: 'View inventory' }).click()
   await page.getByRole('link', { name: 'Add device' }).click()

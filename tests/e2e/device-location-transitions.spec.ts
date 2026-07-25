@@ -24,7 +24,7 @@ test('moves a device between all three location states', async ({ page, request 
   await page.getByLabel('In room').check()
   await page.locator('#device-room').selectOption({ label: 'Kitchen' })
   await page.getByRole('button', { name: 'Save device' }).click()
-  await expect(page.getByText('Kitchen')).toBeVisible()
+  await expect(page.locator('#main-content').getByText('Kitchen')).toBeVisible()
 
   // In room -> Unassigned
   await page.getByRole('button', { name: 'Edit' }).click()

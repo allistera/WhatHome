@@ -13,7 +13,7 @@ test('deleting a room unassigns its devices', async ({ page, request }) => {
   })
 
   await page.goto(`/homes/${home.id}`)
-  await expect(page.getByText('Kitchen', { exact: true })).toBeVisible()
+  await expect(page.locator('#main-content').getByText('Kitchen', { exact: true })).toBeVisible()
 
   page.on('dialog', (dialog) => dialog.dismiss())
   await page

@@ -15,6 +15,7 @@ const emit = defineEmits<{
 
 const typedConfirmation = ref('')
 const dialogRef = ref<HTMLElement | null>(null)
+const confirmInput = ref<HTMLInputElement | null>(null)
 
 const canConfirm = computed(() => {
   if (!props.confirmationText) return true
@@ -22,7 +23,13 @@ const canConfirm = computed(() => {
 })
 
 onMounted(() => {
-  dialogRef.value?.focus()
+  nextTick(() => {
+    if (props.confirmationText && confirmInput.value) {
+      confirmInput.value.focus()
+    } else {
+      dialogRef.value?.focus()
+    }
+  })
 })
 
 function onKeydown(event: KeyboardEvent) {
@@ -47,6 +54,7 @@ function onKeydown(event: KeyboardEvent) {
         <template #default="{ describedBy }">
           <input
             id="confirm-typed-text"
+            ref="confirmInput"
             v-model="typedConfirmation"
             type="text"
             :aria-describedby="describedBy"

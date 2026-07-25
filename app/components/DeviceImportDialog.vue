@@ -26,6 +26,10 @@ const importing = ref(false)
 const formError = ref('')
 const summary = ref<DeviceImportSummary | null>(null)
 
+onMounted(() => {
+  nextTick(() => fileInput.value?.focus())
+})
+
 function onFileChange(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0] ?? null
   selectedFile.value = file

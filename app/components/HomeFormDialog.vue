@@ -19,6 +19,11 @@ const fieldError = ref('')
 const saving = ref(false)
 
 const isEdit = computed(() => Boolean(props.home))
+const nameInput = ref<HTMLInputElement | null>(null)
+
+onMounted(() => {
+  nextTick(() => nameInput.value?.focus())
+})
 
 async function onSubmit() {
   error.value = ''
@@ -55,6 +60,7 @@ async function onSubmit() {
           <template #default="{ describedBy, invalid }">
             <input
               id="home-name"
+              ref="nameInput"
               v-model="name"
               type="text"
               required

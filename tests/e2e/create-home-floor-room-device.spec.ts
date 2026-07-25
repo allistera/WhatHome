@@ -38,5 +38,5 @@ test('creates a home, floor, room, and a room-assigned device', async ({ page })
   await page.getByRole('button', { name: 'Save device' }).click()
 
   await expect(page.getByRole('heading', { name: deviceName })).toBeVisible()
-  await expect(page.getByText(roomName)).toBeVisible()
+  await expect(page.locator('#main-content').getByText(roomName)).toBeVisible()
 })

@@ -231,8 +231,14 @@ function onHomeSaved(updated: HomeDto) {
             </div>
           </div>
 
-          <p v-if="floor.rooms.length === 0" class="hint">No rooms on this floor yet.</p>
-          <ul v-else class="stack" style="list-style: none; padding-left: var(--space-4); gap: var(--space-6)">
+          <p v-if="floor.rooms.length === 0" class="hint" style="margin-top: var(--space-5)">
+            No rooms on this floor yet.
+          </p>
+          <ul
+            v-else
+            class="stack"
+            style="list-style: none; padding-left: var(--space-4); margin: var(--space-5) 0 0; gap: var(--space-6)"
+          >
             <li v-for="(room, roomIndex) in floor.rooms" :key="room.id" class="row-between">
               <NuxtLink :to="`/homes/${homeId}/devices?roomId=${room.id}`">{{ room.name }}</NuxtLink>
               <div class="row">

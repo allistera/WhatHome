@@ -55,6 +55,10 @@ function isActiveHomeOverview() {
   return !!activeHomeId.value && route.path === `/homes/${activeHomeId.value}`
 }
 
+function isActiveInventory() {
+  return route.path === `/homes/${activeHomeId.value}/devices` && !route.query.roomId
+}
+
 function isActiveRoom(roomId: string) {
   return route.path === `/homes/${activeHomeId.value}/devices` && route.query.roomId === roomId
 }
@@ -91,6 +95,15 @@ function isActiveRoom(roomId: string) {
             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
               {{ activeHome.name }}
             </span>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="`/homes/${activeHomeId}/devices`"
+            class="app-nav-link"
+            :class="{ 'is-active': isActiveInventory() }"
+          >
+            <span aria-hidden="true">📦</span>
+            Inventory
           </NuxtLink>
 
           <p v-if="floorsWithRooms.length === 0" class="hint" style="padding-inline: var(--space-5)">

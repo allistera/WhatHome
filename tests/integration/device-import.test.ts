@@ -164,6 +164,21 @@ describe('device import integration', () => {
     expect(summary.results[0]?.device?.manufacturer).toBe('Acme')
   })
 
+  it('rejects malformed CSV without importing recovered rows', async () => {
+    const home = await createHome({ name: 'Beach House' })
+    const file = 'Name,Type,Protocol,Notes\nDevice,Sensor,Zigbee,"unterminated'
+
+    await expect(importDevicesFromCsv(home.id, file)).rejects.toThrow(/malformed.*unterminated/i)
+
+    const { devices } = await listDevices(home.id, {
+      sort: 'name',
+      order: 'asc',
+      page: 1,
+      pageSize: 25
+    })
+    expect(devices).toHaveLength(0)
+  })
+
   it('throws NotFoundError for a home that does not exist', async () => {
     const file = csv([
       ['Name', 'Type', 'Protocol'],

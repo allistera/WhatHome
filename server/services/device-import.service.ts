@@ -65,6 +65,11 @@ export async function importDevicesFromCsv(homeId: string, csvText: string): Pro
     skipEmptyLines: true
   })
 
+  const parseError = parsed.errors[0]
+  if (parseError) {
+    throw new BadRequestError(`The CSV file is malformed: ${parseError.message}.`)
+  }
+
   const fields = parsed.meta.fields ?? []
   if (fields.length === 0) {
     throw new BadRequestError('The CSV file could not be read, or has no header row.')

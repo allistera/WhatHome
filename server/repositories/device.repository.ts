@@ -105,6 +105,10 @@ const sortColumnMap = {
   updatedAt: devices.updatedAt
 } as const
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/[!%_]/g, '!$&')
+}
+
 export async function listDevices(db: DbClient, homeId: string, query: DeviceListQuery) {
   const conditions: SQL[] = [eq(devices.homeId, homeId)]
 
@@ -139,15 +143,15 @@ export async function listDevices(db: DbClient, homeId: string, query: DeviceLis
   }
 
   if (query.search) {
-    const pattern = `%${query.search.toLowerCase()}%`
+    const pattern = `%${escapeLikePattern(query.search.toLowerCase())}%`
     conditions.push(sql`(
-      lower(${devices.name}) like ${pattern} or
-      lower(coalesce(${devices.manufacturer}, '')) like ${pattern} or
-      lower(coalesce(${devices.model}, '')) like ${pattern} or
-      lower(coalesce(${devices.serialNumber}, '')) like ${pattern} or
-      lower(coalesce(host(${devices.ipAddress}), '')) like ${pattern} or
-      lower(${devices.type}) like ${pattern} or
-      lower(${devices.protocol}) like ${pattern}
+      lower(${devices.name}) like ${pattern} escape '!' or
+      lower(coalesce(${devices.manufacturer}, '')) like ${pattern} escape '!' or
+      lower(coalesce(${devices.model}, '')) like ${pattern} escape '!' or
+      lower(coalesce(${devices.serialNumber}, '')) like ${pattern} escape '!' or
+      lower(coalesce(host(${devices.ipAddress}), '')) like ${pattern} escape '!' or
+      lower(${devices.type}) like ${pattern} escape '!' or
+      lower(${devices.protocol}) like ${pattern} escape '!'
     )`)
   }
 

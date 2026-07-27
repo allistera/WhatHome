@@ -156,6 +156,32 @@ describe('device service integration', () => {
     expect(byManufacturer.devices).toHaveLength(1)
   })
 
+  it('treats percent and underscore as literal search characters', async () => {
+    const home = await createHome({ name: 'Beach House' })
+    await createDevice(home.id, { ...baseDevice, name: 'Battery 100%' })
+    await createDevice(home.id, { ...baseDevice, name: 'Battery 100 percent' })
+    await createDevice(home.id, { ...baseDevice, name: 'sensor_one' })
+    await createDevice(home.id, { ...baseDevice, name: 'sensorXone' })
+
+    const percentResult = await listDevices(home.id, {
+      sort: 'name',
+      order: 'asc',
+      page: 1,
+      pageSize: 25,
+      search: '%'
+    })
+    const underscoreResult = await listDevices(home.id, {
+      sort: 'name',
+      order: 'asc',
+      page: 1,
+      pageSize: 25,
+      search: '_'
+    })
+
+    expect(percentResult.devices.map((device) => device.name)).toEqual(['Battery 100%'])
+    expect(underscoreResult.devices.map((device) => device.name)).toEqual(['sensor_one'])
+  })
+
   it('filters devices by location state', async () => {
     const home = await createHome({ name: 'Beach House' })
     await createDevice(home.id, { ...baseDevice, name: 'Unassigned Device' })

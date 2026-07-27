@@ -57,9 +57,9 @@ export async function updateHome(homeId: string, input: UpdateHomeInput) {
     name: input.name,
     version: existing.version + 1,
     updatedAt: new Date()
-  })
+  }, input.version)
   if (!updated) {
-    throw new NotFoundError('Home')
+    throw new ConflictError()
   }
   return toHomeDto(updated)
 }
@@ -88,6 +88,9 @@ export async function deleteHome(homeId: string, input: DeleteHomeInput) {
   }
 
   await db.transaction(async (tx) => {
-    await deleteHomeById(tx, homeId)
+    const deleted = await deleteHomeById(tx, homeId, input.version)
+    if (!deleted) {
+      throw new ConflictError()
+    }
   })
 }

@@ -46,14 +46,27 @@ export async function insertFloor(db: DbClient, input: NewFloor): Promise<Floor>
 export async function updateFloorById(
   db: DbClient,
   floorId: string,
-  values: Partial<NewFloor>
+  values: Partial<NewFloor>,
+  expectedVersion: number
 ): Promise<Floor | undefined> {
-  const [floor] = await db.update(floors).set(values).where(eq(floors.id, floorId)).returning()
+  const [floor] = await db
+    .update(floors)
+    .set(values)
+    .where(and(eq(floors.id, floorId), eq(floors.version, expectedVersion)))
+    .returning()
   return floor
 }
 
-export async function deleteFloorById(db: DbClient, floorId: string): Promise<void> {
-  await db.delete(floors).where(eq(floors.id, floorId))
+export async function deleteFloorById(
+  db: DbClient,
+  floorId: string,
+  expectedVersion: number
+): Promise<boolean> {
+  const deleted = await db
+    .delete(floors)
+    .where(and(eq(floors.id, floorId), eq(floors.version, expectedVersion)))
+    .returning({ id: floors.id })
+  return deleted.length === 1
 }
 
 export async function countRoomsOnFloor(db: DbClient, floorId: string): Promise<number> {

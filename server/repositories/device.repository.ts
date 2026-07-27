@@ -17,14 +17,27 @@ export async function insertDevice(db: DbClient, input: NewDevice): Promise<Devi
 export async function updateDeviceById(
   db: DbClient,
   deviceId: string,
-  values: Partial<NewDevice>
+  values: Partial<NewDevice>,
+  expectedVersion: number
 ): Promise<Device | undefined> {
-  const [device] = await db.update(devices).set(values).where(eq(devices.id, deviceId)).returning()
+  const [device] = await db
+    .update(devices)
+    .set(values)
+    .where(and(eq(devices.id, deviceId), eq(devices.version, expectedVersion)))
+    .returning()
   return device
 }
 
-export async function deleteDeviceById(db: DbClient, deviceId: string): Promise<void> {
-  await db.delete(devices).where(eq(devices.id, deviceId))
+export async function deleteDeviceById(
+  db: DbClient,
+  deviceId: string,
+  expectedVersion: number
+): Promise<boolean> {
+  const deleted = await db
+    .delete(devices)
+    .where(and(eq(devices.id, deviceId), eq(devices.version, expectedVersion)))
+    .returning({ id: devices.id })
+  return deleted.length === 1
 }
 
 export async function unlinkDevicesByRoomIds(db: DbClient, roomIds: string[]): Promise<void> {

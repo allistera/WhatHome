@@ -55,14 +55,27 @@ export async function insertRoom(db: DbClient, input: NewRoom): Promise<Room> {
 export async function updateRoomById(
   db: DbClient,
   roomId: string,
-  values: Partial<NewRoom>
+  values: Partial<NewRoom>,
+  expectedVersion: number
 ): Promise<Room | undefined> {
-  const [room] = await db.update(rooms).set(values).where(eq(rooms.id, roomId)).returning()
+  const [room] = await db
+    .update(rooms)
+    .set(values)
+    .where(and(eq(rooms.id, roomId), eq(rooms.version, expectedVersion)))
+    .returning()
   return room
 }
 
-export async function deleteRoomById(db: DbClient, roomId: string): Promise<void> {
-  await db.delete(rooms).where(eq(rooms.id, roomId))
+export async function deleteRoomById(
+  db: DbClient,
+  roomId: string,
+  expectedVersion: number
+): Promise<boolean> {
+  const deleted = await db
+    .delete(rooms)
+    .where(and(eq(rooms.id, roomId), eq(rooms.version, expectedVersion)))
+    .returning({ id: rooms.id })
+  return deleted.length === 1
 }
 
 export async function setRoomPosition(db: DbClient, roomId: string, position: number): Promise<void> {

@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { ensureMigrated, resetDb } from './helpers/db'
+import { ensureMigrated, getTestDb, resetDb } from './helpers/db'
 import {
   createDevice,
   deleteDevice,
@@ -11,6 +11,7 @@ import { createFloor } from '../../server/services/floor.service'
 import { createHome } from '../../server/services/home.service'
 import { createRoom } from '../../server/services/room.service'
 import { ConflictError, NotFoundError } from '../../server/utils/errors'
+import { updateDeviceById } from '../../server/repositories/device.repository'
 
 beforeAll(async () => {
   await ensureMigrated()
@@ -97,6 +98,19 @@ describe('device service integration', () => {
     await expect(
       updateDevice(device.id, { ...baseDevice, name: 'Speaker v3', version: device.version })
     ).rejects.toBeInstanceOf(ConflictError)
+  })
+
+  it('atomically allows only one update for the same version', async () => {
+    const home = await createHome({ name: 'Beach House' })
+    const device = await createDevice(home.id, { ...baseDevice, name: 'Speaker' })
+    const db = getTestDb()
+
+    const updates = await Promise.all([
+      updateDeviceById(db, device.id, { name: 'Speaker A', version: 2 }, device.version),
+      updateDeviceById(db, device.id, { name: 'Speaker B', version: 2 }, device.version)
+    ])
+
+    expect(updates.filter(Boolean)).toHaveLength(1)
   })
 
   it('deletes a device', async () => {

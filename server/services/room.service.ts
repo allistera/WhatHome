@@ -76,9 +76,9 @@ export async function updateRoom(roomId: string, input: UpdateRoomInput) {
     name: input.name,
     version: existing.version + 1,
     updatedAt: new Date()
-  })
+  }, input.version)
   if (!updated) {
-    throw new NotFoundError('Room')
+    throw new ConflictError()
   }
   return toRoomDto(updated)
 }
@@ -99,7 +99,10 @@ export async function deleteRoom(roomId: string, version: number) {
 
   await db.transaction(async (tx) => {
     await unlinkDevicesByRoomIds(tx, [roomId])
-    await deleteRoomById(tx, roomId)
+    const deleted = await deleteRoomById(tx, roomId, version)
+    if (!deleted) {
+      throw new ConflictError()
+    }
   })
 }
 

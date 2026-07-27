@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm'
+import { and, count, eq } from 'drizzle-orm'
 import type { DbClient } from '../db/client'
 import { devices, floors, homes, rooms } from '../db/schema'
 import type { Home, NewHome } from '../db/schema'
@@ -41,14 +41,27 @@ export async function insertHome(db: DbClient, input: NewHome): Promise<Home> {
 export async function updateHomeById(
   db: DbClient,
   homeId: string,
-  values: Partial<NewHome>
+  values: Partial<NewHome>,
+  expectedVersion: number
 ): Promise<Home | undefined> {
-  const [home] = await db.update(homes).set(values).where(eq(homes.id, homeId)).returning()
+  const [home] = await db
+    .update(homes)
+    .set(values)
+    .where(and(eq(homes.id, homeId), eq(homes.version, expectedVersion)))
+    .returning()
   return home
 }
 
-export async function deleteHomeById(db: DbClient, homeId: string): Promise<void> {
-  await db.delete(homes).where(eq(homes.id, homeId))
+export async function deleteHomeById(
+  db: DbClient,
+  homeId: string,
+  expectedVersion: number
+): Promise<boolean> {
+  const deleted = await db
+    .delete(homes)
+    .where(and(eq(homes.id, homeId), eq(homes.version, expectedVersion)))
+    .returning({ id: homes.id })
+  return deleted.length === 1
 }
 
 export async function countHomeDescendants(db: DbClient, homeId: string) {

@@ -86,9 +86,9 @@ export async function updateDevice(deviceId: string, input: UpdateDeviceInput) {
     ...toColumns(input),
     version: existing.version + 1,
     updatedAt: new Date()
-  })
+  }, input.version)
   if (!updated) {
-    throw new NotFoundError('Device')
+    throw new ConflictError()
   }
   return toDeviceDto(updated)
 }
@@ -99,7 +99,10 @@ export async function deleteDevice(deviceId: string, version: number) {
     throw new ConflictError()
   }
   const db = useDb()
-  await deleteDeviceById(db, deviceId)
+  const deleted = await deleteDeviceById(db, deviceId, version)
+  if (!deleted) {
+    throw new ConflictError()
+  }
 }
 
 export async function getHomeOverview(homeId: string) {

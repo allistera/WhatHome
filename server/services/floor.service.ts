@@ -66,9 +66,9 @@ export async function updateFloor(floorId: string, input: UpdateFloorInput) {
     name: input.name,
     version: existing.version + 1,
     updatedAt: new Date()
-  })
+  }, input.version)
   if (!updated) {
-    throw new NotFoundError('Floor')
+    throw new ConflictError()
   }
   return toFloorDto(updated)
 }
@@ -93,7 +93,10 @@ export async function deleteFloor(floorId: string, version: number) {
     const roomsOnFloor = await listRoomsByFloor(tx, floorId)
     const roomIds = roomsOnFloor.map((room) => room.id)
     await unlinkDevicesByRoomIds(tx, roomIds)
-    await deleteFloorById(tx, floorId)
+    const deleted = await deleteFloorById(tx, floorId, version)
+    if (!deleted) {
+      throw new ConflictError()
+    }
   })
 }
 

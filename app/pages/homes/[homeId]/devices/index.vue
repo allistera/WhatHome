@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { FilterMatchMode } from '@primevue/core/api'
 import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable'
+import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import type { DeviceLocationState, DeviceSortField } from '../../../../../shared/schemas/device'
-import type { DeviceFilterState } from '../../../../components/DeviceFilters.vue'
 import { useDevicesApi } from '../../../../composables/useDevicesApi'
 import { useFloorsApi } from '../../../../composables/useFloorsApi'
 import { useRoomsApi } from '../../../../composables/useRoomsApi'
@@ -32,19 +37,49 @@ const roomNameById = computed(() => {
   return map
 })
 
+const locationStateOptions = [
+  { label: 'Unassigned', value: 'unassigned' },
+  { label: 'In storage', value: 'in_storage' },
+  { label: 'In room', value: 'in_room' }
+]
+
+const floorOptions = computed(() => (floors.value ?? []).map((floor) => ({ label: floor.name, value: floor.id })))
+
+const roomsForFilter = computed(() => {
+  if (!filters.value.floorId.value) return rooms.value ?? []
+  return (rooms.value ?? []).filter((room) => room.floorId === filters.value.floorId.value)
+})
+
+const roomOptions = computed(() => roomsForFilter.value.map((room) => ({ label: room.name, value: room.id })))
+
 function queryParam(key: string): string {
   const value = route.query[key]
   return typeof value === 'string' ? value : ''
 }
 
-const filters = reactive<DeviceFilterState>({
-  search: queryParam('search'),
-  floorId: queryParam('floorId'),
-  roomId: queryParam('roomId'),
-  locationState: queryParam('locationState') as DeviceFilterState['locationState'],
-  type: queryParam('type'),
-  protocol: queryParam('protocol'),
-  manufacturer: queryParam('manufacturer')
+interface DeviceFilterEntry {
+  value: string | null
+  matchMode: string
+}
+
+interface DeviceFiltersModel {
+  global: DeviceFilterEntry
+  type: DeviceFilterEntry
+  protocol: DeviceFilterEntry
+  manufacturer: DeviceFilterEntry
+  locationState: DeviceFilterEntry
+  floorId: DeviceFilterEntry
+  roomId: DeviceFilterEntry
+}
+
+const filters = ref<DeviceFiltersModel>({
+  global: { value: queryParam('search') || null, matchMode: FilterMatchMode.CONTAINS },
+  type: { value: queryParam('type') || null, matchMode: FilterMatchMode.EQUALS },
+  protocol: { value: queryParam('protocol') || null, matchMode: FilterMatchMode.EQUALS },
+  manufacturer: { value: queryParam('manufacturer') || null, matchMode: FilterMatchMode.EQUALS },
+  locationState: { value: queryParam('locationState') || null, matchMode: FilterMatchMode.EQUALS },
+  floorId: { value: queryParam('floorId') || null, matchMode: FilterMatchMode.EQUALS },
+  roomId: { value: queryParam('roomId') || null, matchMode: FilterMatchMode.EQUALS }
 })
 
 const sort = ref<DeviceSortField>((queryParam('sort') as DeviceSortField) || 'name')
@@ -53,13 +88,13 @@ const page = ref(Number(queryParam('page')) || 1)
 
 function syncQuery() {
   const query: Record<string, string> = {}
-  if (filters.search) query.search = filters.search
-  if (filters.floorId) query.floorId = filters.floorId
-  if (filters.roomId) query.roomId = filters.roomId
-  if (filters.locationState) query.locationState = filters.locationState
-  if (filters.type) query.type = filters.type
-  if (filters.protocol) query.protocol = filters.protocol
-  if (filters.manufacturer) query.manufacturer = filters.manufacturer
+  if (filters.value.global.value) query.search = filters.value.global.value
+  if (filters.value.floorId.value) query.floorId = filters.value.floorId.value
+  if (filters.value.roomId.value) query.roomId = filters.value.roomId.value
+  if (filters.value.locationState.value) query.locationState = filters.value.locationState.value
+  if (filters.value.type.value) query.type = filters.value.type.value
+  if (filters.value.protocol.value) query.protocol = filters.value.protocol.value
+  if (filters.value.manufacturer.value) query.manufacturer = filters.value.manufacturer.value
   if (sort.value !== 'name') query.sort = sort.value
   if (order.value !== 'asc') query.order = order.value
   if (page.value !== 1) query.page = String(page.value)
@@ -72,23 +107,21 @@ function scheduleSync() {
   debounceTimer = setTimeout(syncQuery, 300)
 }
 
-function onFiltersUpdate(next: DeviceFilterState) {
-  Object.assign(filters, next)
-  page.value = 1
-  scheduleSync()
-}
+watch(
+  filters,
+  () => {
+    page.value = 1
+    scheduleSync()
+  },
+  { deep: true }
+)
+
+const hasActiveFilters = computed(() => Object.values(filters.value).some((entry) => entry.value))
 
 function clearFilters() {
-  Object.assign(filters, {
-    search: '',
-    floorId: '',
-    roomId: '',
-    locationState: '',
-    type: '',
-    protocol: '',
-    manufacturer: ''
-  })
+  for (const entry of Object.values(filters.value)) entry.value = null
   page.value = 1
+  if (debounceTimer) clearTimeout(debounceTimer)
   syncQuery()
 }
 
@@ -101,26 +134,41 @@ function onSort(event: DataTableSortEvent) {
   syncQuery()
 }
 
-function onPage(event: DataTablePageEvent) {
-  page.value = event.page + 1
+function goToPage(next: number) {
+  page.value = next
   syncQuery()
 }
 
+function onPage(event: DataTablePageEvent) {
+  goToPage(event.page + 1)
+}
+
 const queryKey = computed(() =>
-  JSON.stringify({ ...filters, sort: sort.value, order: order.value, page: page.value })
+  JSON.stringify({
+    global: filters.value.global.value,
+    type: filters.value.type.value,
+    protocol: filters.value.protocol.value,
+    manufacturer: filters.value.manufacturer.value,
+    locationState: filters.value.locationState.value,
+    floorId: filters.value.floorId.value,
+    roomId: filters.value.roomId.value,
+    sort: sort.value,
+    order: order.value,
+    page: page.value
+  })
 )
 
 const { data: result, pending, refresh: refreshDevices } = await useAsyncData(
   `inv-devices-${homeId}`,
   () =>
     devicesApi.list(homeId, {
-      search: filters.search || undefined,
-      floorId: filters.floorId || undefined,
-      roomId: filters.roomId || undefined,
-      locationState: (filters.locationState || undefined) as DeviceLocationState | undefined,
-      type: filters.type || undefined,
-      protocol: filters.protocol || undefined,
-      manufacturer: filters.manufacturer || undefined,
+      search: filters.value.global.value || undefined,
+      floorId: filters.value.floorId.value || undefined,
+      roomId: filters.value.roomId.value || undefined,
+      locationState: (filters.value.locationState.value || undefined) as DeviceLocationState | undefined,
+      type: filters.value.type.value || undefined,
+      protocol: filters.value.protocol.value || undefined,
+      manufacturer: filters.value.manufacturer.value || undefined,
       sort: sort.value,
       order: order.value,
       page: page.value,
@@ -134,7 +182,6 @@ const showImportDialog = ref(false)
 function onImported() {
   refreshDevices()
 }
-
 </script>
 
 <template>
@@ -150,91 +197,209 @@ function onImported() {
       </div>
     </div>
 
-    <DeviceFilters
-      :model-value="filters"
-      :floors="floors ?? []"
-      :rooms="rooms ?? []"
-      :type-options="typeOptions ?? []"
-      :protocol-options="protocolOptions ?? []"
-      :manufacturer-options="manufacturerOptions ?? []"
-      @update:model-value="onFiltersUpdate"
-      @clear="clearFilters"
-    />
-
-    <p v-if="pending">Loading devices…</p>
-
-    <div v-else-if="!result || result.data.length === 0" class="empty-state">
-      <p>No devices match your search and filters.</p>
-      <button type="button" class="btn" @click="clearFilters">Clear all filters</button>
-    </div>
-
-    <template v-else>
-      <div class="table-scroll device-table-wrap">
-        <DataTable
-          :value="result.data"
-          data-key="id"
-          lazy
-          paginator
-          :rows="result.page.size"
-          :total-records="result.page.totalItems"
-          :first="(result.page.number - 1) * result.page.size"
-          :sort-field="sort"
-          :sort-order="order === 'asc' ? 1 : -1"
-          @page="onPage"
-          @sort="onSort"
-        >
-          <template #paginatorstart>
-            Page {{ result.page.number }} of {{ Math.max(result.page.totalPages, 1) }}
-          </template>
-          <Column field="name" header="Name" sortable>
-            <template #body="{ data }">
-              <NuxtLink :to="`/homes/${homeId}/devices/${data.id}`">{{ data.name }}</NuxtLink>
-            </template>
-          </Column>
-          <Column field="type" header="Type" sortable />
-          <Column field="protocol" header="Protocol" />
-          <Column field="manufacturer" header="Manufacturer / model" sortable>
-            <template #body="{ data }">
-              {{ [data.manufacturer, data.model].filter(Boolean).join(' / ') || '—' }}
-            </template>
-          </Column>
-          <Column header="Location">
-            <template #body="{ data }">
-              <LocationBadge
-                :state="data.locationState"
-                :room-name="data.roomId ? roomNameById.get(data.roomId) : null"
-              />
-            </template>
-          </Column>
-          <Column field="ipAddress" header="IP address">
-            <template #body="{ data }">{{ data.ipAddress ?? '—' }}</template>
-          </Column>
-          <Column field="purchaseDate" header="Purchase date" sortable>
-            <template #body="{ data }">{{ data.purchaseDate ?? '—' }}</template>
-          </Column>
-        </DataTable>
-      </div>
-
-      <ul class="device-cards" style="list-style: none; padding: 0">
-        <li v-for="device in result.data" :key="device.id" class="card stack">
+    <div class="table-scroll device-table-wrap">
+      <DataTable
+        v-model:filters="filters"
+        :value="result?.data ?? []"
+        data-key="id"
+        lazy
+        :loading="pending"
+        paginator
+        filter-display="row"
+        :rows="result?.page.size ?? 25"
+        :total-records="result?.page.totalItems ?? 0"
+        :first="((result?.page.number ?? 1) - 1) * (result?.page.size ?? 25)"
+        :sort-field="sort"
+        :sort-order="order === 'asc' ? 1 : -1"
+        :global-filter-fields="['name', 'manufacturer', 'model', 'serialNumber', 'ipAddress', 'type', 'protocol']"
+        @page="onPage"
+        @sort="onSort"
+      >
+        <template #header>
           <div class="row-between">
-            <NuxtLink :to="`/homes/${homeId}/devices/${device.id}`" style="font-weight: 700">
-              {{ device.name }}
-            </NuxtLink>
-            <LocationBadge
-              :state="device.locationState"
-              :room-name="device.roomId ? roomNameById.get(device.roomId) : null"
+            <div class="field" style="margin: 0">
+              <label for="device-search" class="visually-hidden">Search</label>
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  id="device-search"
+                  v-model="filters.global.value"
+                  placeholder="Search name, manufacturer, model, serial, IP…"
+                  style="width: 20rem; max-width: 100%"
+                />
+              </IconField>
+            </div>
+            <Button
+              label="Clear all filters"
+              size="small"
+              severity="secondary"
+              outlined
+              :disabled="!hasActiveFilters"
+              @click="clearFilters"
             />
           </div>
-          <p class="hint">{{ device.type }} · {{ device.protocol }}</p>
-          <p v-if="device.manufacturer || device.model" class="hint">
-            {{ [device.manufacturer, device.model].filter(Boolean).join(' / ') }}
-          </p>
-          <p v-if="device.ipAddress" class="hint">IP: {{ device.ipAddress }}</p>
-          <p v-if="device.purchaseDate" class="hint">Purchased: {{ device.purchaseDate }}</p>
-        </li>
-      </ul>
-    </template>
+        </template>
+
+        <template #empty>
+          <div class="empty-state">
+            <p>No devices match your search and filters.</p>
+            <Button label="Clear all filters" size="small" :disabled="!hasActiveFilters" @click="clearFilters" />
+          </div>
+        </template>
+
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">
+            <NuxtLink :to="`/homes/${homeId}/devices/${data.id}`">{{ data.name }}</NuxtLink>
+          </template>
+        </Column>
+
+        <Column field="type" header="Type" sortable :show-filter-menu="false">
+          <template #filter="{ filterModel, filterCallback }">
+            <Select
+              v-model="filterModel.value"
+              input-id="filter-type"
+              :options="typeOptions ?? []"
+              placeholder="Any type"
+              size="small"
+              show-clear
+              @change="filterCallback()"
+            />
+          </template>
+        </Column>
+
+        <Column header="Protocol" filter-field="protocol" :show-filter-menu="false">
+          <template #body="{ data }">{{ data.protocol }}</template>
+          <template #filter="{ filterModel, filterCallback }">
+            <Select
+              v-model="filterModel.value"
+              input-id="filter-protocol"
+              :options="protocolOptions ?? []"
+              placeholder="Any protocol"
+              size="small"
+              show-clear
+              @change="filterCallback()"
+            />
+          </template>
+        </Column>
+
+        <Column header="Manufacturer / model" sortable field="manufacturer" :show-filter-menu="false">
+          <template #body="{ data }">
+            {{ [data.manufacturer, data.model].filter(Boolean).join(' / ') || '—' }}
+          </template>
+          <template #filter="{ filterModel, filterCallback }">
+            <Select
+              v-model="filterModel.value"
+              input-id="filter-manufacturer"
+              :options="manufacturerOptions ?? []"
+              placeholder="Any manufacturer"
+              size="small"
+              show-clear
+              @change="filterCallback()"
+            />
+          </template>
+        </Column>
+
+        <Column header="Location" filter-field="locationState" :show-filter-menu="false">
+          <template #body="{ data }">
+            <LocationBadge
+              :state="data.locationState"
+              :room-name="data.roomId ? roomNameById.get(data.roomId) : null"
+            />
+          </template>
+          <template #filter>
+            <div class="stack" style="gap: var(--space-1)">
+              <Select
+                v-model="filters.floorId.value"
+                input-id="filter-floor"
+                :options="floorOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="Any floor"
+                size="small"
+                show-clear
+              />
+              <Select
+                v-model="filters.roomId.value"
+                input-id="filter-room"
+                :options="roomOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="Any room"
+                size="small"
+                show-clear
+              />
+              <Select
+                v-model="filters.locationState.value"
+                input-id="filter-location"
+                :options="locationStateOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="Any location"
+                size="small"
+                show-clear
+              />
+            </div>
+          </template>
+        </Column>
+
+        <Column field="ipAddress" header="IP address">
+          <template #body="{ data }">{{ data.ipAddress ?? '—' }}</template>
+        </Column>
+
+        <Column field="purchaseDate" header="Purchase date" sortable>
+          <template #body="{ data }">{{ data.purchaseDate ?? '—' }}</template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <div class="device-cards-wrap">
+      <p v-if="pending">Loading devices…</p>
+      <p v-else-if="!result || result.data.length === 0" class="empty-state">
+        No devices match your search and filters.
+        <button type="button" class="btn" @click="clearFilters">Clear all filters</button>
+      </p>
+      <template v-else>
+        <ul class="device-cards" style="list-style: none; padding: 0">
+          <li v-for="device in result.data" :key="device.id" class="card stack">
+            <div class="row-between">
+              <NuxtLink :to="`/homes/${homeId}/devices/${device.id}`" style="font-weight: 700">
+                {{ device.name }}
+              </NuxtLink>
+              <LocationBadge
+                :state="device.locationState"
+                :room-name="device.roomId ? roomNameById.get(device.roomId) : null"
+              />
+            </div>
+            <p class="hint">{{ device.type }} · {{ device.protocol }}</p>
+            <p v-if="device.manufacturer || device.model" class="hint">
+              {{ [device.manufacturer, device.model].filter(Boolean).join(' / ') }}
+            </p>
+            <p v-if="device.ipAddress" class="hint">IP: {{ device.ipAddress }}</p>
+            <p v-if="device.purchaseDate" class="hint">Purchased: {{ device.purchaseDate }}</p>
+          </li>
+        </ul>
+
+        <nav class="pagination" aria-label="Pagination">
+          <button
+            type="button"
+            class="btn btn-small"
+            :disabled="result.page.number <= 1"
+            @click="goToPage(result.page.number - 1)"
+          >
+            Previous
+          </button>
+          <span>Page {{ result.page.number }} of {{ Math.max(result.page.totalPages, 1) }}</span>
+          <button
+            type="button"
+            class="btn btn-small"
+            :disabled="result.page.number >= result.page.totalPages"
+            @click="goToPage(result.page.number + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      </template>
+    </div>
 
     <DeviceImportDialog
       v-if="showImportDialog"

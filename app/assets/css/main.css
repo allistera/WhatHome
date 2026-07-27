@@ -454,18 +454,29 @@ th button {
   gap: var(--space-3);
 }
 
+.device-cards-wrap {
+  display: block;
+}
+
 .device-table-wrap {
   display: none;
 }
 
 @media (min-width: 720px) {
-  .device-cards {
+  .device-cards-wrap {
     display: none;
   }
 
   .device-table-wrap {
     display: block;
   }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
 }
 
 .modal-backdrop {

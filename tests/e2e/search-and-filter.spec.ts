@@ -47,7 +47,10 @@ test('searches and filters the device inventory', async ({ page, request }) => {
   await expect(page.getByRole('link', { name: 'Front Door Lock' })).toBeVisible()
 })
 
-test('filters the device inventory when a room is selected in the sidebar', async ({ page, request }) => {
+test('filters the device inventory when a room is selected in the sidebar', async ({
+  page,
+  request
+}) => {
   const home = await apiCreateHome(request, uniqueName('Room Navigation Home'))
   const floor = await apiCreateFloor(request, home.id, uniqueName('Ground Floor'))
   const kitchen = await apiCreateRoom(request, floor.id, uniqueName('Kitchen'))

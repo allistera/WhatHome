@@ -1,0 +1,5 @@
+.agents/
+.claude/
+drizzle/
+public/
+skills-lock.json

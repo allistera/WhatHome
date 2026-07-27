@@ -45,7 +45,9 @@ describe('room service integration', () => {
     const home = await createHome({ name: 'Beach House' })
     const floor = await createFloor(home.id, { name: 'Ground Floor' })
     await createRoom(floor.id, { name: 'Kitchen' })
-    await expect(createRoom(floor.id, { name: 'kitchen' })).rejects.toBeInstanceOf(DuplicateNameError)
+    await expect(createRoom(floor.id, { name: 'kitchen' })).rejects.toBeInstanceOf(
+      DuplicateNameError
+    )
   })
 
   it('allows the same room name across different floors', async () => {
@@ -82,9 +84,9 @@ describe('room service integration', () => {
     const first = await createRoom(floor.id, { name: 'Kitchen' })
     await createRoom(floor.id, { name: 'Living Room' })
 
-    await expect(
-      reorderRooms(floor.id, { roomIds: [first.id, first.id] })
-    ).rejects.toBeInstanceOf(ValidationError)
+    await expect(reorderRooms(floor.id, { roomIds: [first.id, first.id] })).rejects.toBeInstanceOf(
+      ValidationError
+    )
   })
 
   it('reports the device count before deletion', async () => {

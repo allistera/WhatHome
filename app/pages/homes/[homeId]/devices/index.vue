@@ -26,8 +26,12 @@ const floorsApi = useFloorsApi()
 const roomsApi = useRoomsApi()
 
 const { data: floors } = await useAsyncData(`inv-floors-${homeId}`, () => floorsApi.list(homeId))
-const { data: rooms } = await useAsyncData(`inv-rooms-${homeId}`, () => roomsApi.listForHome(homeId))
-const { data: typeOptions } = await useAsyncData(`inv-types-${homeId}`, () => devicesApi.suggestions.types(homeId))
+const { data: rooms } = await useAsyncData(`inv-rooms-${homeId}`, () =>
+  roomsApi.listForHome(homeId)
+)
+const { data: typeOptions } = await useAsyncData(`inv-types-${homeId}`, () =>
+  devicesApi.suggestions.types(homeId)
+)
 const { data: protocolOptions } = await useAsyncData(`inv-protocols-${homeId}`, () =>
   devicesApi.suggestions.protocols(homeId)
 )
@@ -47,14 +51,18 @@ const locationStateOptions = [
   { label: 'In room', value: 'in_room' }
 ]
 
-const floorOptions = computed(() => (floors.value ?? []).map((floor) => ({ label: floor.name, value: floor.id })))
+const floorOptions = computed(() =>
+  (floors.value ?? []).map((floor) => ({ label: floor.name, value: floor.id }))
+)
 
 const roomsForFilter = computed(() => {
   if (!filters.value.floorId.value) return rooms.value ?? []
   return (rooms.value ?? []).filter((room) => room.floorId === filters.value.floorId.value)
 })
 
-const roomOptions = computed(() => roomsForFilter.value.map((room) => ({ label: room.name, value: room.id })))
+const roomOptions = computed(() =>
+  roomsForFilter.value.map((room) => ({ label: room.name, value: room.id }))
+)
 
 function queryParam(key: string): string {
   const value = route.query[key]
@@ -188,14 +196,19 @@ const queryKey = computed(() =>
   })
 )
 
-const { data: result, pending, refresh: refreshDevices } = await useAsyncData(
+const {
+  data: result,
+  pending,
+  refresh: refreshDevices
+} = await useAsyncData(
   `inv-devices-${homeId}`,
   () =>
     devicesApi.list(homeId, {
       search: filters.value.global.value || undefined,
       floorId: filters.value.floorId.value || undefined,
       roomId: filters.value.roomId.value || undefined,
-      locationState: (filters.value.locationState.value || undefined) as DeviceLocationState | undefined,
+      locationState: (filters.value.locationState.value || undefined) as
+        DeviceLocationState | undefined,
       type: filters.value.type.value || undefined,
       protocol: filters.value.protocol.value || undefined,
       manufacturer: filters.value.manufacturer.value || undefined,
@@ -278,7 +291,15 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
         :first="((result?.page.number ?? 1) - 1) * (result?.page.size ?? 25)"
         :sort-field="sort"
         :sort-order="order === 'asc' ? 1 : -1"
-        :global-filter-fields="['name', 'manufacturer', 'model', 'serialNumber', 'ipAddress', 'type', 'protocol']"
+        :global-filter-fields="[
+          'name',
+          'manufacturer',
+          'model',
+          'serialNumber',
+          'ipAddress',
+          'type',
+          'protocol'
+        ]"
         @page="onPage"
         @sort="onSort"
       >
@@ -310,7 +331,12 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
         <template #empty>
           <div class="empty-state">
             <p>No devices match your search and filters.</p>
-            <Button label="Clear all filters" size="small" :disabled="!hasActiveFilters" @click="clearFilters" />
+            <Button
+              label="Clear all filters"
+              size="small"
+              :disabled="!hasActiveFilters"
+              @click="clearFilters"
+            />
           </div>
         </template>
 
@@ -349,7 +375,12 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
           </template>
         </Column>
 
-        <Column header="Manufacturer / model" sortable field="manufacturer" :show-filter-menu="false">
+        <Column
+          header="Manufacturer / model"
+          sortable
+          field="manufacturer"
+          :show-filter-menu="false"
+        >
           <template #body="{ data }">
             {{ [data.manufacturer, data.model].filter(Boolean).join(' / ') || '—' }}
           </template>
@@ -435,7 +466,13 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
       <p v-if="pending">Loading devices…</p>
       <p v-else-if="!result || result.data.length === 0" class="empty-state">
         No devices match your search and filters.
-        <Button label="Clear all filters" size="small" severity="secondary" outlined @click="clearFilters" />
+        <Button
+          label="Clear all filters"
+          size="small"
+          severity="secondary"
+          outlined
+          @click="clearFilters"
+        />
       </p>
       <template v-else>
         <ul class="device-cards" style="list-style: none; padding: 0">

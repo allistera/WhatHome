@@ -1,5 +1,9 @@
 import { useDb } from '../db/client'
-import type { CreateFloorInput, ReorderFloorsInput, UpdateFloorInput } from '../../shared/schemas/floor'
+import type {
+  CreateFloorInput,
+  ReorderFloorsInput,
+  UpdateFloorInput
+} from '../../shared/schemas/floor'
 import { ConflictError, DuplicateNameError, NotFoundError, ValidationError } from '../utils/errors'
 import {
   deleteFloorById,
@@ -11,10 +15,7 @@ import {
   setFloorPosition,
   updateFloorById
 } from '../repositories/floor.repository'
-import {
-  countDevicesByRoomIds,
-  unlinkDevicesByRoomIds
-} from '../repositories/device.repository'
+import { countDevicesByRoomIds, unlinkDevicesByRoomIds } from '../repositories/device.repository'
 import { listRoomsByFloor } from '../repositories/room.repository'
 import { getHomeOrThrow } from './home.service'
 import { toFloorDto } from './mappers'
@@ -62,11 +63,16 @@ export async function updateFloor(floorId: string, input: UpdateFloorInput) {
     throw new DuplicateNameError('A floor with this name already exists in this home.')
   }
 
-  const updated = await updateFloorById(db, floorId, {
-    name: input.name,
-    version: existing.version + 1,
-    updatedAt: new Date()
-  }, input.version)
+  const updated = await updateFloorById(
+    db,
+    floorId,
+    {
+      name: input.name,
+      version: existing.version + 1,
+      updatedAt: new Date()
+    },
+    input.version
+  )
   if (!updated) {
     throw new ConflictError()
   }
@@ -112,7 +118,9 @@ export async function reorderFloors(homeId: string, input: ReorderFloorsInput) {
     new Set(input.floorIds).size !== input.floorIds.length ||
     !input.floorIds.every((id) => existingIds.has(id))
   ) {
-    throw new ValidationError({ floorIds: ['The floor list must include every floor in this home exactly once.'] })
+    throw new ValidationError({
+      floorIds: ['The floor list must include every floor in this home exactly once.']
+    })
   }
 
   await db.transaction(async (tx) => {

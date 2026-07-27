@@ -1,4 +1,9 @@
-import type { ApiErrorBody, ApiErrorCode, ApiListResponse, ApiSuccessResponse } from '../../shared/types/api'
+import type {
+  ApiErrorBody,
+  ApiErrorCode,
+  ApiListResponse,
+  ApiSuccessResponse
+} from '../../shared/types/api'
 
 export class ApiRequestError extends Error {
   code: ApiErrorCode
@@ -26,7 +31,8 @@ function rethrowAsApiError(error: unknown): never {
     'data' in error &&
     isApiErrorBody((error as { data: unknown }).data)
   ) {
-    const status = 'statusCode' in error ? Number((error as { statusCode: unknown }).statusCode) : 500
+    const status =
+      'statusCode' in error ? Number((error as { statusCode: unknown }).statusCode) : 500
     throw new ApiRequestError((error as { data: ApiErrorBody }).data.error, status)
   }
   throw error
@@ -52,11 +58,17 @@ async function request<T>(url: string, options: RequestOptions): Promise<T> {
   }
 }
 
-export function apiGet<T>(url: string, query?: Record<string, unknown>): Promise<ApiSuccessResponse<T>> {
+export function apiGet<T>(
+  url: string,
+  query?: Record<string, unknown>
+): Promise<ApiSuccessResponse<T>> {
   return request<ApiSuccessResponse<T>>(url, { method: 'GET', query })
 }
 
-export function apiGetList<T>(url: string, query?: Record<string, unknown>): Promise<ApiListResponse<T>> {
+export function apiGetList<T>(
+  url: string,
+  query?: Record<string, unknown>
+): Promise<ApiListResponse<T>> {
   return request<ApiListResponse<T>>(url, { method: 'GET', query })
 }
 
@@ -76,7 +88,10 @@ export async function apiDelete(url: string, body?: unknown): Promise<void> {
  * Uploads a FormData payload (e.g. a file). Deliberately does not set a
  * Content-Type header — the browser must set its own multipart boundary.
  */
-export async function apiUpload<T>(url: string, formData: FormData): Promise<ApiSuccessResponse<T>> {
+export async function apiUpload<T>(
+  url: string,
+  formData: FormData
+): Promise<ApiSuccessResponse<T>> {
   try {
     const response = await $fetch(url, { method: 'POST', body: formData })
     return response as ApiSuccessResponse<T>

@@ -72,11 +72,16 @@ export async function updateRoom(roomId: string, input: UpdateRoomInput) {
     throw new DuplicateNameError('A room with this name already exists on this floor.')
   }
 
-  const updated = await updateRoomById(db, roomId, {
-    name: input.name,
-    version: existing.version + 1,
-    updatedAt: new Date()
-  }, input.version)
+  const updated = await updateRoomById(
+    db,
+    roomId,
+    {
+      name: input.name,
+      version: existing.version + 1,
+      updatedAt: new Date()
+    },
+    input.version
+  )
   if (!updated) {
     throw new ConflictError()
   }
@@ -118,7 +123,9 @@ export async function reorderRooms(floorId: string, input: ReorderRoomsInput) {
     new Set(input.roomIds).size !== input.roomIds.length ||
     !input.roomIds.every((id) => existingIds.has(id))
   ) {
-    throw new ValidationError({ roomIds: ['The room list must include every room on this floor exactly once.'] })
+    throw new ValidationError({
+      roomIds: ['The room list must include every room on this floor exactly once.']
+    })
   }
 
   await db.transaction(async (tx) => {

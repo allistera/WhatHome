@@ -31,9 +31,7 @@ const ipAddressSchema = z
   })
   .refine(
     (value) =>
-      value === null ||
-      z.ipv4().safeParse(value).success ||
-      z.ipv6().safeParse(value).success,
+      value === null || z.ipv4().safeParse(value).success || z.ipv6().safeParse(value).success,
     { message: 'Enter a valid IPv4 or IPv6 address.' }
   )
   .optional()
@@ -54,8 +52,16 @@ const purchaseDateSchema = z
 const optionalRoomIdSchema = uuidSchema.nullish()
 
 const deviceBaseShape = {
-  name: z.string().trim().min(1, 'Name is required.').max(160, 'Name must be 160 characters or fewer.'),
-  type: z.string().trim().min(1, 'Type is required.').max(80, 'Type must be 80 characters or fewer.'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required.')
+    .max(160, 'Name must be 160 characters or fewer.'),
+  type: z
+    .string()
+    .trim()
+    .min(1, 'Type is required.')
+    .max(80, 'Type must be 80 characters or fewer.'),
   protocol: z
     .string()
     .trim()
@@ -106,7 +112,13 @@ export const updateDeviceSchema = withLocationRefinement(
   z.object({ ...deviceBaseShape, version: versionSchema })
 )
 
-export const deviceSortFields = ['name', 'purchaseDate', 'manufacturer', 'type', 'updatedAt'] as const
+export const deviceSortFields = [
+  'name',
+  'purchaseDate',
+  'manufacturer',
+  'type',
+  'updatedAt'
+] as const
 export type DeviceSortField = (typeof deviceSortFields)[number]
 
 export const deviceListQuerySchema = z.object({

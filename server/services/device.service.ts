@@ -1,5 +1,9 @@
 import { useDb } from '../db/client'
-import type { CreateDeviceInput, DeviceListQuery, UpdateDeviceInput } from '../../shared/schemas/device'
+import type {
+  CreateDeviceInput,
+  DeviceListQuery,
+  UpdateDeviceInput
+} from '../../shared/schemas/device'
 import { ConflictError, NotFoundError, ValidationError } from '../utils/errors'
 import {
   countDeviceLocationBreakdown,
@@ -82,11 +86,16 @@ export async function updateDevice(deviceId: string, input: UpdateDeviceInput) {
   }
 
   const db = useDb()
-  const updated = await updateDeviceById(db, deviceId, {
-    ...toColumns(input),
-    version: existing.version + 1,
-    updatedAt: new Date()
-  }, input.version)
+  const updated = await updateDeviceById(
+    db,
+    deviceId,
+    {
+      ...toColumns(input),
+      version: existing.version + 1,
+      updatedAt: new Date()
+    },
+    input.version
+  )
   if (!updated) {
     throw new ConflictError()
   }

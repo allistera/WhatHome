@@ -11,7 +11,9 @@ export default defineApiHandler(async (event) => {
   const homeId = requireUuidRouteParam(event, 'homeId')
 
   const parts = await readMultipartFormData(event)
-  const filePart = parts?.find((part) => part.name === 'file' && part.data && part.data.byteLength > 0)
+  const filePart = parts?.find(
+    (part) => part.name === 'file' && part.data && part.data.byteLength > 0
+  )
 
   if (!filePart) {
     throw new BadRequestError('No CSV file was uploaded. Attach it under the "file" field.')

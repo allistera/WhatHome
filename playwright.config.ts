@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 const PORT = process.env.E2E_PORT ?? '3100'
 const BASE_URL = `http://localhost:${PORT}`
-const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/whathome_e2e'
+const DATABASE_URL =
+  process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/whathome_e2e'
 
 // Ensure globalSetup (which runs in this same process) sees the same value
 // used for the webServer's own DATABASE_URL below.

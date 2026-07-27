@@ -12,7 +12,8 @@ vi.mock('../../server/repositories/floor.repository', async (importOriginal) => 
 })
 
 const { createDevice, getDeviceOrThrow } = await import('../../server/services/device.service')
-const { createFloor, deleteFloor, getFloorOrThrow } = await import('../../server/services/floor.service')
+const { createFloor, deleteFloor, getFloorOrThrow } =
+  await import('../../server/services/floor.service')
 const { createHome } = await import('../../server/services/home.service')
 const { createRoom, getRoomOrThrow } = await import('../../server/services/room.service')
 

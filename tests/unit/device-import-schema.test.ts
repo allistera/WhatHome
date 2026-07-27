@@ -45,7 +45,9 @@ describe('isTruthyImportFlag', () => {
 
 describe('deviceImportColumns', () => {
   it('marks exactly name, type, and protocol as required', () => {
-    const required = deviceImportColumns.filter((column) => column.required).map((column) => column.key)
+    const required = deviceImportColumns
+      .filter((column) => column.required)
+      .map((column) => column.key)
     expect(required.sort()).toEqual(['name', 'protocol', 'type'])
   })
 })

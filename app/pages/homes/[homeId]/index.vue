@@ -17,21 +17,23 @@ const floorsApi = useFloorsApi()
 const roomsApi = useRoomsApi()
 const toast = useToast()
 
-const { data: home, error: homeError } = await useAsyncData(`home-${homeId}`, () => homesApi.get(homeId))
+const { data: home, error: homeError } = await useAsyncData(`home-${homeId}`, () =>
+  homesApi.get(homeId)
+)
 const { data: overview, refresh: refreshOverview } = await useAsyncData(
   `home-overview-${homeId}`,
   () => homesApi.overview(homeId)
 )
-const { data: floors, refresh: refreshFloors } = await useAsyncData(
-  `floors-${homeId}`,
-  () => floorsApi.list(homeId)
+const { data: floors, refresh: refreshFloors } = await useAsyncData(`floors-${homeId}`, () =>
+  floorsApi.list(homeId)
 )
-const { data: rooms, refresh: refreshRooms } = await useAsyncData(
-  `rooms-${homeId}`,
-  () => roomsApi.listForHome(homeId)
+const { data: rooms, refresh: refreshRooms } = await useAsyncData(`rooms-${homeId}`, () =>
+  roomsApi.listForHome(homeId)
 )
 
-const notFound = computed(() => homeError.value instanceof ApiRequestError && homeError.value.status === 404)
+const notFound = computed(
+  () => homeError.value instanceof ApiRequestError && homeError.value.status === 404
+)
 
 const floorsWithRooms = computed(() => {
   if (!floors.value) return []
@@ -99,7 +101,8 @@ async function confirmDeleteFloor() {
     toast.add({ severity: 'success', summary: 'Floor deleted', life: 3000 })
     await refreshAll()
   } catch (err) {
-    floorDeleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete floor.'
+    floorDeleteError.value =
+      err instanceof ApiRequestError ? err.message : 'Failed to delete floor.'
   } finally {
     floorDeleteBusy.value = false
   }
@@ -186,10 +189,18 @@ function onHomeSaved(updated: HomeDto) {
     <section class="card stack" aria-labelledby="overview-heading">
       <h2 id="overview-heading">Overview</h2>
       <div class="row" style="gap: var(--space-5)">
-        <p><strong>{{ overview?.deviceCounts.total ?? 0 }}</strong> total devices</p>
-        <p><strong>{{ overview?.deviceCounts.inRoom ?? 0 }}</strong> in rooms</p>
-        <p><strong>{{ overview?.deviceCounts.inStorage ?? 0 }}</strong> in storage</p>
-        <p><strong>{{ overview?.deviceCounts.unassigned ?? 0 }}</strong> unassigned</p>
+        <p>
+          <strong>{{ overview?.deviceCounts.total ?? 0 }}</strong> total devices
+        </p>
+        <p>
+          <strong>{{ overview?.deviceCounts.inRoom ?? 0 }}</strong> in rooms
+        </p>
+        <p>
+          <strong>{{ overview?.deviceCounts.inStorage ?? 0 }}</strong> in storage
+        </p>
+        <p>
+          <strong>{{ overview?.deviceCounts.unassigned ?? 0 }}</strong> unassigned
+        </p>
       </div>
       <div class="row">
         <NuxtLink :to="`/homes/${homeId}/devices`" class="btn btn-primary">View inventory</NuxtLink>
@@ -230,9 +241,27 @@ function onHomeSaved(updated: HomeDto) {
                 aria-label="Move floor down"
                 @click="moveFloor(floorIndex, 1)"
               />
-              <Button label="Rename" size="small" severity="secondary" outlined @click="editingFloor = floor" />
-              <Button label="Add room" size="small" severity="secondary" outlined @click="addingRoomForFloor = floor" />
-              <Button label="Delete" size="small" severity="danger" outlined @click="openDeleteFloor(floor)" />
+              <Button
+                label="Rename"
+                size="small"
+                severity="secondary"
+                outlined
+                @click="editingFloor = floor"
+              />
+              <Button
+                label="Add room"
+                size="small"
+                severity="secondary"
+                outlined
+                @click="addingRoomForFloor = floor"
+              />
+              <Button
+                label="Delete"
+                size="small"
+                severity="danger"
+                outlined
+                @click="openDeleteFloor(floor)"
+              />
             </div>
           </div>
 
@@ -242,10 +271,17 @@ function onHomeSaved(updated: HomeDto) {
           <ul
             v-else
             class="stack"
-            style="list-style: none; padding-left: var(--space-4); margin: var(--space-5) 0 0; gap: var(--space-6)"
+            style="
+              list-style: none;
+              padding-left: var(--space-4);
+              margin: var(--space-5) 0 0;
+              gap: var(--space-6);
+            "
           >
             <li v-for="(room, roomIndex) in floor.rooms" :key="room.id" class="row-between">
-              <NuxtLink :to="`/homes/${homeId}/devices?roomId=${room.id}`">{{ room.name }}</NuxtLink>
+              <NuxtLink :to="`/homes/${homeId}/devices?roomId=${room.id}`">{{
+                room.name
+              }}</NuxtLink>
               <div class="row">
                 <Button
                   icon="pi pi-arrow-up"
@@ -265,8 +301,20 @@ function onHomeSaved(updated: HomeDto) {
                   aria-label="Move room down"
                   @click="moveRoom(floor, roomIndex, 1)"
                 />
-                <Button label="Rename" size="small" severity="secondary" outlined @click="editingRoom = room" />
-                <Button label="Delete" size="small" severity="danger" outlined @click="openDeleteRoom(room)" />
+                <Button
+                  label="Rename"
+                  size="small"
+                  severity="secondary"
+                  outlined
+                  @click="editingRoom = room"
+                />
+                <Button
+                  label="Delete"
+                  size="small"
+                  severity="danger"
+                  outlined
+                  @click="openDeleteRoom(room)"
+                />
               </div>
             </li>
           </ul>
@@ -286,7 +334,12 @@ function onHomeSaved(updated: HomeDto) {
     </section>
 
     <!-- Home dialogs -->
-    <HomeFormDialog v-if="editingHome" :home="home" @saved="onHomeSaved" @cancel="editingHome = false" />
+    <HomeFormDialog
+      v-if="editingHome"
+      :home="home"
+      @saved="onHomeSaved"
+      @cancel="editingHome = false"
+    />
     <ConfirmDialog
       v-if="deletingHome"
       title="Delete home"
@@ -297,10 +350,12 @@ function onHomeSaved(updated: HomeDto) {
       @cancel="deletingHome = false"
       @confirm="confirmDeleteHome"
     >
-      <p>This will permanently delete <strong>{{ home.name }}</strong> and everything in it.</p>
+      <p>
+        This will permanently delete <strong>{{ home.name }}</strong> and everything in it.
+      </p>
       <p v-if="homeDeletionImpact">
-        This includes {{ homeDeletionImpact.floors }} floors, {{ homeDeletionImpact.rooms }} rooms, and
-        {{ homeDeletionImpact.devices }} devices. This action cannot be undone.
+        This includes {{ homeDeletionImpact.floors }} floors, {{ homeDeletionImpact.rooms }} rooms,
+        and {{ homeDeletionImpact.devices }} devices. This action cannot be undone.
       </p>
       <Message v-if="homeDeleteError" severity="error">{{ homeDeleteError }}</Message>
     </ConfirmDialog>
@@ -311,7 +366,13 @@ function onHomeSaved(updated: HomeDto) {
       title="Add floor"
       label="Floor name"
       submit-label="Add floor"
-      :on-submit="async (name) => { await floorsApi.create(homeId, { name }); addingFloor = false; await refreshAll() }"
+      :on-submit="
+        async (name) => {
+          await floorsApi.create(homeId, { name })
+          addingFloor = false
+          await refreshAll()
+        }
+      "
       @cancel="addingFloor = false"
     />
     <NameFormDialog
@@ -319,7 +380,13 @@ function onHomeSaved(updated: HomeDto) {
       title="Rename floor"
       label="Floor name"
       :initial-name="editingFloor.name"
-      :on-submit="async (name) => { await floorsApi.update(editingFloor!.id, { name, version: editingFloor!.version }); editingFloor = null; await refreshAll() }"
+      :on-submit="
+        async (name) => {
+          await floorsApi.update(editingFloor!.id, { name, version: editingFloor!.version })
+          editingFloor = null
+          await refreshAll()
+        }
+      "
       @cancel="editingFloor = null"
     />
     <ConfirmDialog
@@ -331,9 +398,13 @@ function onHomeSaved(updated: HomeDto) {
       @cancel="deletingFloor = null"
       @confirm="confirmDeleteFloor"
     >
-      <p>Delete <strong>{{ deletingFloor.name }}</strong>?</p>
+      <p>
+        Delete <strong>{{ deletingFloor.name }}</strong
+        >?
+      </p>
       <p v-if="floorDeletionImpact">
-        This will delete {{ floorDeletionImpact.roomCount }} rooms. {{ floorDeletionImpact.deviceCount }}
+        This will delete {{ floorDeletionImpact.roomCount }} rooms.
+        {{ floorDeletionImpact.deviceCount }}
         devices will become unassigned.
       </p>
       <Message v-if="floorDeleteError" severity="error">{{ floorDeleteError }}</Message>
@@ -345,7 +416,13 @@ function onHomeSaved(updated: HomeDto) {
       title="Add room"
       label="Room name"
       submit-label="Add room"
-      :on-submit="async (name) => { await roomsApi.create(addingRoomForFloor!.id, { name }); addingRoomForFloor = null; await refreshAll() }"
+      :on-submit="
+        async (name) => {
+          await roomsApi.create(addingRoomForFloor!.id, { name })
+          addingRoomForFloor = null
+          await refreshAll()
+        }
+      "
       @cancel="addingRoomForFloor = null"
     />
     <NameFormDialog
@@ -353,7 +430,13 @@ function onHomeSaved(updated: HomeDto) {
       title="Rename room"
       label="Room name"
       :initial-name="editingRoom.name"
-      :on-submit="async (name) => { await roomsApi.update(editingRoom!.id, { name, version: editingRoom!.version }); editingRoom = null; await refreshAll() }"
+      :on-submit="
+        async (name) => {
+          await roomsApi.update(editingRoom!.id, { name, version: editingRoom!.version })
+          editingRoom = null
+          await refreshAll()
+        }
+      "
       @cancel="editingRoom = null"
     />
     <ConfirmDialog
@@ -365,7 +448,10 @@ function onHomeSaved(updated: HomeDto) {
       @cancel="deletingRoom = null"
       @confirm="confirmDeleteRoom"
     >
-      <p>Delete <strong>{{ deletingRoom.name }}</strong>?</p>
+      <p>
+        Delete <strong>{{ deletingRoom.name }}</strong
+        >?
+      </p>
       <p v-if="roomDeletionImpact">
         {{ roomDeletionImpact.deviceCount }} devices will become unassigned.
       </p>

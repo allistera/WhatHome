@@ -107,11 +107,20 @@ function isActiveRoom(roomId: string) {
             Inventory
           </NuxtLink>
 
-          <p v-if="floorsWithRooms.length === 0" class="hint" style="padding-inline: var(--space-5)">
+          <p
+            v-if="floorsWithRooms.length === 0"
+            class="hint"
+            style="padding-inline: var(--space-5)"
+          >
             No floors yet.
           </p>
 
-          <div v-for="floor in floorsWithRooms" :key="floor.id" class="stack" style="gap: var(--space-1)">
+          <div
+            v-for="floor in floorsWithRooms"
+            :key="floor.id"
+            class="stack"
+            style="gap: var(--space-1)"
+          >
             <p class="app-nav-section-label" style="padding-left: var(--space-5)">
               {{ floor.name }}
             </p>

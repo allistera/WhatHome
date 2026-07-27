@@ -34,7 +34,11 @@ async function onSubmit() {
     const result = props.home
       ? await homesApi.update(props.home.id, { name: name.value, version: props.home.version })
       : await homesApi.create({ name: name.value })
-    toast.add({ severity: 'success', summary: props.home ? 'Home renamed' : 'Home created', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: props.home ? 'Home renamed' : 'Home created',
+      life: 3000
+    })
     emit('saved', result)
   } catch (err) {
     if (err instanceof ApiRequestError) {
@@ -88,7 +92,12 @@ function onVisibleChange(visible: boolean) {
 
     <template #footer>
       <Button label="Cancel" severity="secondary" outlined @click="emit('cancel')" />
-      <Button type="submit" form="home-form" :label="saving ? 'Saving…' : 'Save'" :disabled="saving" />
+      <Button
+        type="submit"
+        form="home-form"
+        :label="saving ? 'Saving…' : 'Save'"
+        :disabled="saving"
+      />
     </template>
   </Dialog>
 </template>

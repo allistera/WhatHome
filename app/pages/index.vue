@@ -9,7 +9,12 @@ import { useHomesApi } from '../composables/useHomesApi'
 const homesApi = useHomesApi()
 const toast = useToast()
 
-const { data: homes, refresh, pending, error: loadError } = await useAsyncData('homes', () => homesApi.list())
+const {
+  data: homes,
+  refresh,
+  pending,
+  error: loadError
+} = await useAsyncData('homes', () => homesApi.list())
 
 const showCreateDialog = ref(false)
 const editingHome = ref<HomeSummaryDto | null>(null)
@@ -87,7 +92,13 @@ function onSaved() {
           </div>
           <div class="row">
             <NuxtLink :to="`/homes/${home.id}`" class="btn btn-small">Open</NuxtLink>
-            <Button label="Rename" size="small" severity="secondary" outlined @click="editingHome = home" />
+            <Button
+              label="Rename"
+              size="small"
+              severity="secondary"
+              outlined
+              @click="editingHome = home"
+            />
             <Button
               label="Delete"
               size="small"

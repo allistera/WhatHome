@@ -7,8 +7,20 @@ export interface DeviceImportColumn {
 }
 
 export const deviceImportColumns: DeviceImportColumn[] = [
-  { key: 'name', label: 'Name', required: true, description: 'Device name.', example: 'Living Room Sensor' },
-  { key: 'type', label: 'Type', required: true, description: 'Device type or category.', example: 'Sensor' },
+  {
+    key: 'name',
+    label: 'Name',
+    required: true,
+    description: 'Device name.',
+    example: 'Living Room Sensor'
+  },
+  {
+    key: 'type',
+    label: 'Type',
+    required: true,
+    description: 'Device type or category.',
+    example: 'Sensor'
+  },
   {
     key: 'protocol',
     label: 'Protocol',
@@ -49,21 +61,24 @@ export const deviceImportColumns: DeviceImportColumn[] = [
     key: 'floor',
     label: 'Floor',
     required: false,
-    description: 'Optional. Provide together with Room to place the device in a room. Must match an existing floor name in this home.',
+    description:
+      'Optional. Provide together with Room to place the device in a room. Must match an existing floor name in this home.',
     example: 'Ground Floor'
   },
   {
     key: 'room',
     label: 'Room',
     required: false,
-    description: 'Optional. Provide together with Floor to place the device in a room. Must match an existing room name on that floor.',
+    description:
+      'Optional. Provide together with Floor to place the device in a room. Must match an existing room name on that floor.',
     example: 'Kitchen'
   },
   {
     key: 'inStorage',
     label: 'In Storage',
     required: false,
-    description: 'Optional. Enter "yes" if the device is in storage. Leave Floor and Room blank when this is set.',
+    description:
+      'Optional. Enter "yes" if the device is in storage. Leave Floor and Room blank when this is set.',
     example: 'no'
   },
   { key: 'notes', label: 'Notes', required: false, description: 'Optional.', example: '' }
@@ -104,7 +119,10 @@ const columnAliases: Record<DeviceImportColumnKey, string[]> = {
 }
 
 function normalizeHeaderText(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
 }
 
 /** Matches a raw CSV header cell to a canonical column key, tolerant of casing/spacing/punctuation. */

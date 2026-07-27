@@ -15,10 +15,14 @@ const devicesApi = useDevicesApi()
 const roomsApi = useRoomsApi()
 const toast = useToast()
 
-const { data: device, refresh, error: loadError } = await useAsyncData(`device-${deviceId}`, () =>
-  devicesApi.get(deviceId)
+const {
+  data: device,
+  refresh,
+  error: loadError
+} = await useAsyncData(`device-${deviceId}`, () => devicesApi.get(deviceId))
+const { data: rooms } = await useAsyncData(`device-detail-rooms-${homeId}`, () =>
+  roomsApi.listForHome(homeId)
 )
-const { data: rooms } = await useAsyncData(`device-detail-rooms-${homeId}`, () => roomsApi.listForHome(homeId))
 
 const notFound = computed(
   () =>
@@ -82,17 +86,30 @@ function fmtDate(value: string | null) {
       <div class="card stack">
         <LocationBadge :state="device.locationState" :room-name="roomName" />
 
-        <dl class="stack" style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4)">
-          <dt>Type</dt><dd>{{ device.type }}</dd>
-          <dt>Protocol</dt><dd>{{ device.protocol }}</dd>
-          <dt>Manufacturer</dt><dd>{{ device.manufacturer ?? '—' }}</dd>
-          <dt>Model</dt><dd>{{ device.model ?? '—' }}</dd>
-          <dt>Serial number</dt><dd>{{ device.serialNumber ?? '—' }}</dd>
-          <dt>IP address</dt><dd>{{ device.ipAddress ?? '—' }}</dd>
-          <dt>Purchase date</dt><dd>{{ device.purchaseDate ?? '—' }}</dd>
-          <dt>Notes</dt><dd style="white-space: pre-wrap">{{ device.notes ?? '—' }}</dd>
-          <dt>Created</dt><dd>{{ fmtDate(device.createdAt) }}</dd>
-          <dt>Updated</dt><dd>{{ fmtDate(device.updatedAt) }}</dd>
+        <dl
+          class="stack"
+          style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4)"
+        >
+          <dt>Type</dt>
+          <dd>{{ device.type }}</dd>
+          <dt>Protocol</dt>
+          <dd>{{ device.protocol }}</dd>
+          <dt>Manufacturer</dt>
+          <dd>{{ device.manufacturer ?? '—' }}</dd>
+          <dt>Model</dt>
+          <dd>{{ device.model ?? '—' }}</dd>
+          <dt>Serial number</dt>
+          <dd>{{ device.serialNumber ?? '—' }}</dd>
+          <dt>IP address</dt>
+          <dd>{{ device.ipAddress ?? '—' }}</dd>
+          <dt>Purchase date</dt>
+          <dd>{{ device.purchaseDate ?? '—' }}</dd>
+          <dt>Notes</dt>
+          <dd style="white-space: pre-wrap">{{ device.notes ?? '—' }}</dd>
+          <dt>Created</dt>
+          <dd>{{ fmtDate(device.createdAt) }}</dd>
+          <dt>Updated</dt>
+          <dd>{{ fmtDate(device.updatedAt) }}</dd>
         </dl>
       </div>
     </div>
@@ -111,7 +128,10 @@ function fmtDate(value: string | null) {
       @cancel="deleting = false"
       @confirm="confirmDelete"
     >
-      <p>Delete <strong>{{ device.name }}</strong>? This action cannot be undone.</p>
+      <p>
+        Delete <strong>{{ device.name }}</strong
+        >? This action cannot be undone.
+      </p>
       <Message v-if="deleteError" severity="error">{{ deleteError }}</Message>
     </ConfirmDialog>
   </div>

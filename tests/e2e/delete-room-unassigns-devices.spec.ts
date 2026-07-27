@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { apiCreateDevice, apiCreateFloor, apiCreateHome, apiCreateRoom, baseDevicePayload, uniqueName } from './helpers'
+import {
+  apiCreateDevice,
+  apiCreateFloor,
+  apiCreateHome,
+  apiCreateRoom,
+  baseDevicePayload,
+  uniqueName
+} from './helpers'
 
 test('deleting a room unassigns its devices', async ({ page, request }) => {
   const home = await apiCreateHome(request, uniqueName('Delete Room Home'))

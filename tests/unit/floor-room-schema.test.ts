@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { createFloorSchema, reorderFloorsSchema, updateFloorSchema } from '../../shared/schemas/floor'
+import {
+  createFloorSchema,
+  reorderFloorsSchema,
+  updateFloorSchema
+} from '../../shared/schemas/floor'
 import { createRoomSchema, reorderRoomsSchema, updateRoomSchema } from '../../shared/schemas/room'
 
 const validId = '11111111-1111-4111-8111-111111111111'

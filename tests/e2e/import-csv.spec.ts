@@ -38,7 +38,10 @@ test('imports devices from a CSV file, showing required columns and per-row resu
   await expect(page.getByRole('link', { name: 'Fridge Sensor' })).toBeVisible()
 })
 
-test('deletes the successfully imported devices after a partial import failure', async ({ page, request }) => {
+test('deletes the successfully imported devices after a partial import failure', async ({
+  page,
+  request
+}) => {
   const home = await apiCreateHome(request, uniqueName('Import Undo Home'))
   const floor = await apiCreateFloor(request, home.id, 'Ground Floor')
   await apiCreateRoom(request, floor.id, 'Kitchen')
@@ -71,7 +74,10 @@ test('deletes the successfully imported devices after a partial import failure',
   await expect(page.getByRole('link', { name: 'Fridge Sensor' })).not.toBeVisible()
 })
 
-test('downloading the CSV template gives all the documented columns as headers', async ({ page, request }) => {
+test('downloading the CSV template gives all the documented columns as headers', async ({
+  page,
+  request
+}) => {
   const home = await apiCreateHome(request, uniqueName('Template Home'))
 
   await page.goto(`/homes/${home.id}/devices`)

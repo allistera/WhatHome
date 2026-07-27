@@ -62,7 +62,8 @@ async function onImport() {
       emit('imported')
     }
   } catch (err) {
-    formError.value = err instanceof ApiRequestError ? err.message : 'Failed to import the CSV file.'
+    formError.value =
+      err instanceof ApiRequestError ? err.message : 'Failed to import the CSV file.'
   } finally {
     importing.value = false
   }
@@ -91,7 +92,8 @@ async function confirmDeleteImported() {
     toast.add({ severity: 'success', summary: 'Imported devices deleted', life: 3000 })
     emit('imported')
   } catch (err) {
-    deleteImportedError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete imported devices.'
+    deleteImportedError.value =
+      err instanceof ApiRequestError ? err.message : 'Failed to delete imported devices.'
   } finally {
     deletingImported.value = false
   }
@@ -117,13 +119,15 @@ function onVisibleChange(visible: boolean) {
     <div class="stack">
       <div class="stack">
         <p class="hint">
-          The first row must be a header row. Column names are matched flexibly (case and spacing don't
-          matter), and extra columns are ignored.
+          The first row must be a header row. Column names are matched flexibly (case and spacing
+          don't matter), and extra columns are ignored.
         </p>
 
         <div class="table-scroll">
           <table>
-            <caption class="visually-hidden">CSV columns</caption>
+            <caption class="visually-hidden">
+              CSV columns
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Column</th>
@@ -145,7 +149,11 @@ function onVisibleChange(visible: boolean) {
         </div>
 
         <div>
-          <a class="btn btn-small" href="/api/device-import/template" download="whathome-device-import-template.csv">
+          <a
+            class="btn btn-small"
+            href="/api/device-import/template"
+            download="whathome-device-import-template.csv"
+          >
             Download CSV template
           </a>
         </div>
@@ -162,18 +170,27 @@ function onVisibleChange(visible: boolean) {
             type="file"
             accept=".csv,text/csv"
             @change="onFileChange"
-          >
+          />
         </div>
       </div>
 
       <div v-else class="stack">
         <p>
-          <strong>{{ summary.created }}</strong> of {{ summary.totalRows }} rows imported successfully.
+          <strong>{{ summary.created }}</strong> of {{ summary.totalRows }} rows imported
+          successfully.
           <span v-if="summary.failed > 0">{{ summary.failed }} row(s) failed.</span>
         </p>
 
-        <ul v-if="summary.failed > 0" class="stack" style="list-style: none; padding: 0; max-height: 16rem; overflow-y: auto">
-          <li v-for="result in summary.results.filter((r) => r.status === 'error')" :key="result.row" class="card">
+        <ul
+          v-if="summary.failed > 0"
+          class="stack"
+          style="list-style: none; padding: 0; max-height: 16rem; overflow-y: auto"
+        >
+          <li
+            v-for="result in summary.results.filter((r) => r.status === 'error')"
+            :key="result.row"
+            class="card"
+          >
             <p style="font-weight: 600">Row {{ result.row }}</p>
             <p class="field-error">{{ result.error }}</p>
             <ul v-if="result.fieldErrors">
@@ -186,8 +203,8 @@ function onVisibleChange(visible: boolean) {
 
         <div v-if="summary.failed > 0 && summary.created > 0 && !importedDeleted" class="stack">
           <p class="hint">
-            If you'd rather fix the file and re-import everything at once, you can delete the devices that
-            did import instead of keeping a partial import.
+            If you'd rather fix the file and re-import everything at once, you can delete the
+            devices that did import instead of keeping a partial import.
           </p>
           <div>
             <Button
@@ -216,7 +233,13 @@ function onVisibleChange(visible: boolean) {
         />
       </template>
       <template v-else>
-        <Button v-if="summary.failed > 0" label="Import another file" severity="secondary" outlined @click="reset" />
+        <Button
+          v-if="summary.failed > 0"
+          label="Import another file"
+          severity="secondary"
+          outlined
+          @click="reset"
+        />
         <Button label="Done" @click="emit('cancel')" />
       </template>
     </template>
@@ -232,8 +255,8 @@ function onVisibleChange(visible: boolean) {
     @confirm="confirmDeleteImported"
   >
     <p>
-      Delete the <strong>{{ summary?.created }}</strong> device(s) that were successfully imported? This
-      action cannot be undone.
+      Delete the <strong>{{ summary?.created }}</strong> device(s) that were successfully imported?
+      This action cannot be undone.
     </p>
   </ConfirmDialog>
 </template>

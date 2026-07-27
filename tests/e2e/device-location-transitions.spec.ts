@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { apiCreateDevice, apiCreateFloor, apiCreateHome, apiCreateRoom, baseDevicePayload, uniqueName } from './helpers'
+import {
+  apiCreateDevice,
+  apiCreateFloor,
+  apiCreateHome,
+  apiCreateRoom,
+  baseDevicePayload,
+  uniqueName
+} from './helpers'
 
 test('moves a device between all three location states', async ({ page, request }) => {
   const home = await apiCreateHome(request, uniqueName('Transitions Home'))

@@ -78,6 +78,10 @@ export async function deleteRoomById(
   return deleted.length === 1
 }
 
-export async function setRoomPosition(db: DbClient, roomId: string, position: number): Promise<void> {
+export async function setRoomPosition(
+  db: DbClient,
+  roomId: string,
+  position: number
+): Promise<void> {
   await db.update(rooms).set({ position }).where(eq(rooms.id, roomId))
 }

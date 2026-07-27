@@ -1,5 +1,11 @@
 import type { Device, Floor, Home, Room } from '../db/schema'
-import type { DeviceDto, DeviceLocationState, FloorDto, HomeDto, RoomDto } from '../../shared/types/domain'
+import type {
+  DeviceDto,
+  DeviceLocationState,
+  FloorDto,
+  HomeDto,
+  RoomDto
+} from '../../shared/types/domain'
 
 export function toHomeDto(home: Home): HomeDto {
   return {
@@ -36,7 +42,9 @@ export function toRoomDto(room: Room): RoomDto {
   }
 }
 
-export function deviceLocationState(device: Pick<Device, 'roomId' | 'inStorage'>): DeviceLocationState {
+export function deviceLocationState(
+  device: Pick<Device, 'roomId' | 'inStorage'>
+): DeviceLocationState {
   if (device.roomId) return 'in_room'
   if (device.inStorage) return 'in_storage'
   return 'unassigned'

@@ -24,7 +24,11 @@ describe('data persistence across a simulated application restart', () => {
     const freshDb = drizzle(freshClient, { schema })
 
     try {
-      const [row] = await freshDb.select().from(schema.homes).where(eq(schema.homes.id, home.id)).limit(1)
+      const [row] = await freshDb
+        .select()
+        .from(schema.homes)
+        .where(eq(schema.homes.id, home.id))
+        .limit(1)
       expect(row).toBeDefined()
       expect(row?.name).toBe('Beach House')
     } finally {

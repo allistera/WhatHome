@@ -1,4 +1,8 @@
-import type { CreateFloorInput, ReorderFloorsInput, UpdateFloorInput } from '../../shared/schemas/floor'
+import type {
+  CreateFloorInput,
+  ReorderFloorsInput,
+  UpdateFloorInput
+} from '../../shared/schemas/floor'
 import type { FloorDto } from '../../shared/types/domain'
 import { apiDelete, apiGet, apiPatch, apiPost } from './useApiClient'
 
@@ -17,7 +21,8 @@ export function useFloorsApi() {
       (await apiPatch<FloorDto>(`/api/floors/${floorId}`, input)).data,
     deletionImpact: async (floorId: string) =>
       (await apiGet<FloorDeletionImpact>(`/api/floors/${floorId}/deletion-impact`)).data,
-    remove: async (floorId: string, version: number) => apiDelete(`/api/floors/${floorId}`, { version }),
+    remove: async (floorId: string, version: number) =>
+      apiDelete(`/api/floors/${floorId}`, { version }),
     reorder: async (homeId: string, input: ReorderFloorsInput) =>
       (await apiPost<FloorDto[]>(`/api/homes/${homeId}/floors/reorder`, input)).data
   }

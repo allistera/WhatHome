@@ -19,7 +19,12 @@ const REQUIRED_COLUMN_KEYS: DeviceImportColumnKey[] = ['name', 'type', 'protocol
 
 class RowValidationError extends Error {}
 
-async function resolveRoomId(homeId: string, floorName?: string, roomName?: string, inStorage?: boolean) {
+async function resolveRoomId(
+  homeId: string,
+  floorName?: string,
+  roomName?: string,
+  inStorage?: boolean
+) {
   if (!floorName && !roomName) {
     return null
   }
@@ -46,7 +51,10 @@ async function resolveRoomId(homeId: string, floorName?: string, roomName?: stri
   return room.id
 }
 
-function extractRow(rawRecord: Record<string, string>, headerMap: Map<string, DeviceImportColumnKey>) {
+function extractRow(
+  rawRecord: Record<string, string>,
+  headerMap: Map<string, DeviceImportColumnKey>
+) {
   const row: RawDeviceImportRow = {}
   for (const [field, value] of Object.entries(rawRecord)) {
     const key = headerMap.get(field)
@@ -57,7 +65,10 @@ function extractRow(rawRecord: Record<string, string>, headerMap: Map<string, De
   return row
 }
 
-export async function importDevicesFromCsv(homeId: string, csvText: string): Promise<DeviceImportSummary> {
+export async function importDevicesFromCsv(
+  homeId: string,
+  csvText: string
+): Promise<DeviceImportSummary> {
   await getHomeOrThrow(homeId)
 
   const parsed = Papa.parse<Record<string, string>>(csvText.trim(), {
@@ -143,7 +154,11 @@ export async function importDevicesFromCsv(homeId: string, csvText: string): Pro
         results.push({ row: rowNumber, status: 'error', error: error.message })
       } else {
         console.error(`Unexpected error importing CSV row ${rowNumber}:`, error)
-        results.push({ row: rowNumber, status: 'error', error: 'Unexpected error while importing this row.' })
+        results.push({
+          row: rowNumber,
+          status: 'error',
+          error: 'Unexpected error while importing this row.'
+        })
       }
     }
   }

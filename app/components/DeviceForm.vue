@@ -47,10 +47,12 @@ const roomGroups = computed(() => {
   if (!floors.value) return []
   return floors.value.map((floor) => ({
     label: floor.name,
-    items: (rooms.value ?? []).filter((room) => room.floorId === floor.id).map((room) => ({
-      label: room.name,
-      value: room.id
-    }))
+    items: (rooms.value ?? [])
+      .filter((room) => room.floorId === floor.id)
+      .map((room) => ({
+        label: room.name,
+        value: room.id
+      }))
   }))
 })
 
@@ -63,7 +65,9 @@ const locationOptions = [
 const filteredTypeOptions = ref<string[]>([])
 function onTypeComplete(event: AutoCompleteCompleteEvent) {
   const query = event.query.toLowerCase()
-  filteredTypeOptions.value = (typeOptions.value ?? []).filter((option) => option.toLowerCase().includes(query))
+  filteredTypeOptions.value = (typeOptions.value ?? []).filter((option) =>
+    option.toLowerCase().includes(query)
+  )
 }
 
 const filteredProtocolOptions = ref<string[]>([])
@@ -179,7 +183,13 @@ async function onSubmit() {
         </template>
       </FormField>
 
-      <FormField id="device-protocol" label="Protocol" required :error="errorFor('protocol')" style="flex: 1">
+      <FormField
+        id="device-protocol"
+        label="Protocol"
+        required
+        :error="errorFor('protocol')"
+        style="flex: 1"
+      >
         <template #default="{ describedBy, invalid }">
           <AutoComplete
             v-model="form.protocol"
@@ -198,7 +208,12 @@ async function onSubmit() {
     </div>
 
     <div class="row" style="align-items: flex-start">
-      <FormField id="device-manufacturer" label="Manufacturer" :error="errorFor('manufacturer')" style="flex: 1">
+      <FormField
+        id="device-manufacturer"
+        label="Manufacturer"
+        :error="errorFor('manufacturer')"
+        style="flex: 1"
+      >
         <template #default="{ describedBy, invalid }">
           <InputText
             id="device-manufacturer"
@@ -244,7 +259,12 @@ async function onSubmit() {
         </template>
       </FormField>
 
-      <FormField id="device-ip-address" label="IP address" :error="errorFor('ipAddress')" style="flex: 1">
+      <FormField
+        id="device-ip-address"
+        label="IP address"
+        :error="errorFor('ipAddress')"
+        style="flex: 1"
+      >
         <template #default="{ describedBy, invalid }">
           <InputText
             id="device-ip-address"
@@ -266,7 +286,7 @@ async function onSubmit() {
           type="date"
           :aria-describedby="describedBy"
           :aria-invalid="invalid"
-        >
+        />
       </template>
     </FormField>
 

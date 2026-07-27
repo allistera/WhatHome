@@ -78,9 +78,9 @@ describe('floor service integration', () => {
     const first = await createFloor(home.id, { name: 'Ground Floor' })
     await createFloor(home.id, { name: 'First Floor' })
 
-    await expect(
-      reorderFloors(home.id, { floorIds: [first.id, first.id] })
-    ).rejects.toBeInstanceOf(ValidationError)
+    await expect(reorderFloors(home.id, { floorIds: [first.id, first.id] })).rejects.toBeInstanceOf(
+      ValidationError
+    )
   })
 
   it('reports rooms and device counts before deletion', async () => {

@@ -53,11 +53,16 @@ export async function updateHome(homeId: string, input: UpdateHomeInput) {
     throw new ConflictError()
   }
 
-  const updated = await updateHomeById(db, homeId, {
-    name: input.name,
-    version: existing.version + 1,
-    updatedAt: new Date()
-  }, input.version)
+  const updated = await updateHomeById(
+    db,
+    homeId,
+    {
+      name: input.name,
+      version: existing.version + 1,
+      updatedAt: new Date()
+    },
+    input.version
+  )
   if (!updated) {
     throw new ConflictError()
   }

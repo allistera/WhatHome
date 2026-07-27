@@ -50,7 +50,10 @@ export async function unlinkDevicesByRoomIds(db: DbClient, roomIds: string[]): P
 
 export async function countDevicesByRoomIds(db: DbClient, roomIds: string[]): Promise<number> {
   if (roomIds.length === 0) return 0
-  const [row] = await db.select({ total: count() }).from(devices).where(inArray(devices.roomId, roomIds))
+  const [row] = await db
+    .select({ total: count() })
+    .from(devices)
+    .where(inArray(devices.roomId, roomIds))
   return row?.total ?? 0
 }
 
@@ -74,7 +77,11 @@ export async function countDeviceLocationBreakdown(db: DbClient, homeId: string)
   )
 }
 
-export async function listRecentDeviceChanges(db: DbClient, homeId: string, limit: number): Promise<Device[]> {
+export async function listRecentDeviceChanges(
+  db: DbClient,
+  homeId: string,
+  limit: number
+): Promise<Device[]> {
   return db
     .select()
     .from(devices)

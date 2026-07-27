@@ -46,11 +46,8 @@ const purchaseDateSchema = z
     const trimmed = value.trim()
     return trimmed === '' ? null : trimmed
   })
-  .refine((value) => value === null || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+  .refine((value) => value === null || z.iso.date().safeParse(value).success, {
     message: 'Enter a valid date in YYYY-MM-DD format.'
-  })
-  .refine((value) => value === null || !Number.isNaN(Date.parse(value)), {
-    message: 'Enter a valid date.'
   })
   .optional()
 

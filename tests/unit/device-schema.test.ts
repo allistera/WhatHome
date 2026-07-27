@@ -125,4 +125,32 @@ describe('createDeviceSchema', () => {
     })
     expect(result.success).toBe(true)
   })
+
+  it('rejects a purchase date that does not exist', () => {
+    const result = createDeviceSchema.safeParse({
+      ...base,
+      purchaseDate: '2026-02-30',
+      locationState: 'unassigned',
+      roomId: null
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('validates leap days using the calendar year', () => {
+    const commonYear = createDeviceSchema.safeParse({
+      ...base,
+      purchaseDate: '2026-02-29',
+      locationState: 'unassigned',
+      roomId: null
+    })
+    const leapYear = createDeviceSchema.safeParse({
+      ...base,
+      purchaseDate: '2024-02-29',
+      locationState: 'unassigned',
+      roomId: null
+    })
+
+    expect(commonYear.success).toBe(false)
+    expect(leapYear.success).toBe(true)
+  })
 })

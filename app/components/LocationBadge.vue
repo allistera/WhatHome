@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Tag from 'primevue/tag'
 import type { DeviceLocationState } from '../../shared/schemas/device'
 
 const props = defineProps<{
@@ -6,18 +7,16 @@ const props = defineProps<{
   roomName?: string | null
 }>()
 
-const config: Record<DeviceLocationState, { label: string; icon: string; className: string }> = {
-  unassigned: { label: 'Unassigned', icon: '○', className: 'badge-unassigned' },
-  in_storage: { label: 'In storage', icon: '▢', className: 'badge-storage' },
-  in_room: { label: 'In room', icon: '●', className: 'badge-room' }
+const config: Record<DeviceLocationState, { label: string; icon: string; severity: 'danger' | 'warn' | 'success' }> = {
+  unassigned: { label: 'Unassigned', icon: 'pi pi-circle', severity: 'danger' },
+  in_storage: { label: 'In storage', icon: 'pi pi-box', severity: 'warn' },
+  in_room: { label: 'In room', icon: 'pi pi-map-marker', severity: 'success' }
 }
 
 const current = computed(() => config[props.state])
+const displayLabel = computed(() => (props.state === 'in_room' && props.roomName ? props.roomName : current.value.label))
 </script>
 
 <template>
-  <span class="badge" :class="current.className">
-    <span aria-hidden="true">{{ current.icon }}</span>
-    <span>{{ state === 'in_room' && roomName ? roomName : current.label }}</span>
-  </span>
+  <Tag :value="displayLabel" :severity="current.severity" :icon="current.icon" rounded />
 </template>

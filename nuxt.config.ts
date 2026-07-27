@@ -1,4 +1,25 @@
+import { definePreset } from '@primeuix/themes'
 import Aura from '@primeuix/themes/aura'
+
+// Matches the app's brand red (--color-primary in main.css) rather than Aura's
+// default emerald, so PrimeVue components (Button, Tag, etc.) stay on-brand.
+const WhatHomePreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '#fdf6f5',
+      100: '#f6d4d1',
+      200: '#f0b2ac',
+      300: '#e99088',
+      400: '#e26e63',
+      500: '#db4c3f',
+      600: '#ba4136',
+      700: '#99352c',
+      800: '#782a23',
+      900: '#581e19',
+      950: '#371310'
+    }
+  }
+})
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -37,7 +58,7 @@ export default defineNuxtConfig({
     autoImport: false,
     options: {
       theme: {
-        preset: Aura,
+        preset: WhatHomePreset,
         options: {
           // Matches the existing prefers-color-scheme based dark mode in main.css.
           darkModeSelector: 'system',

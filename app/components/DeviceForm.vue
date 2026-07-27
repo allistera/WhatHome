@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import type { AutoCompleteCompleteEvent } from 'primevue/autocomplete'
+import AutoComplete from 'primevue/autocomplete'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
+import Select from 'primevue/select'
+import SelectButton from 'primevue/selectbutton'
+import Textarea from 'primevue/textarea'
+import { useToast } from 'primevue/usetoast'
 import type { DeviceLocationState } from '../../shared/schemas/device'
 import type { DeviceDto } from '../../shared/types/domain'
 import { ApiRequestError } from '../composables/useApiClient'
@@ -19,6 +28,7 @@ const emit = defineEmits<{
 const devicesApi = useDevicesApi()
 const floorsApi = useFloorsApi()
 const roomsApi = useRoomsApi()
+const toast = useToast()
 
 const { data: floors } = await useAsyncData(`device-form-floors-${props.homeId}`, () =>
   floorsApi.list(props.homeId)
@@ -33,13 +43,36 @@ const { data: protocolOptions } = await useAsyncData(`device-form-protocols-${pr
   devicesApi.suggestions.protocols(props.homeId)
 )
 
-const floorsWithRooms = computed(() => {
+const roomGroups = computed(() => {
   if (!floors.value) return []
   return floors.value.map((floor) => ({
-    ...floor,
-    rooms: (rooms.value ?? []).filter((room) => room.floorId === floor.id)
+    label: floor.name,
+    items: (rooms.value ?? []).filter((room) => room.floorId === floor.id).map((room) => ({
+      label: room.name,
+      value: room.id
+    }))
   }))
 })
+
+const locationOptions = [
+  { label: 'Unassigned', value: 'unassigned' },
+  { label: 'In storage', value: 'in_storage' },
+  { label: 'In room', value: 'in_room' }
+]
+
+const filteredTypeOptions = ref<string[]>([])
+function onTypeComplete(event: AutoCompleteCompleteEvent) {
+  const query = event.query.toLowerCase()
+  filteredTypeOptions.value = (typeOptions.value ?? []).filter((option) => option.toLowerCase().includes(query))
+}
+
+const filteredProtocolOptions = ref<string[]>([])
+function onProtocolComplete(event: AutoCompleteCompleteEvent) {
+  const query = event.query.toLowerCase()
+  filteredProtocolOptions.value = (protocolOptions.value ?? []).filter((option) =>
+    option.toLowerCase().includes(query)
+  )
+}
 
 const form = reactive({
   name: props.device?.name ?? '',
@@ -86,6 +119,11 @@ async function onSubmit() {
     const result = props.device
       ? await devicesApi.update(props.device.id, { ...payload, version: props.device.version })
       : await devicesApi.create(props.homeId, payload)
+    toast.add({
+      severity: 'success',
+      summary: props.device ? 'Device updated' : 'Device created',
+      life: 3000
+    })
     emit('saved', result)
   } catch (err) {
     if (err instanceof ApiRequestError) {
@@ -107,56 +145,54 @@ async function onSubmit() {
 
 <template>
   <form class="stack" novalidate @submit.prevent="onSubmit">
-    <p v-if="formError" class="alert" role="alert">{{ formError }}</p>
+    <Message v-if="formError" severity="error">{{ formError }}</Message>
 
     <FormField id="device-name" label="Name" required :error="errorFor('name')">
       <template #default="{ describedBy, invalid }">
-        <input
+        <InputText
           id="device-name"
           v-model="form.name"
-          type="text"
           required
           maxlength="160"
+          style="width: 100%"
           :aria-describedby="describedBy"
-          :aria-invalid="invalid"
-        >
+          :invalid="invalid"
+        />
       </template>
     </FormField>
 
     <div class="row" style="align-items: flex-start">
       <FormField id="device-type" label="Type" required :error="errorFor('type')" style="flex: 1">
         <template #default="{ describedBy, invalid }">
-          <input
-            id="device-type"
+          <AutoComplete
             v-model="form.type"
-            type="text"
-            required
-            maxlength="80"
-            list="type-suggestions"
+            input-id="device-type"
+            dropdown
+            complete-on-focus
+            :suggestions="filteredTypeOptions"
+            style="width: 100%"
+            :input-style="{ width: '100%' }"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
-          <datalist id="type-suggestions">
-            <option v-for="option in typeOptions" :key="option" :value="option" />
-          </datalist>
+            :invalid="invalid"
+            @complete="onTypeComplete"
+          />
         </template>
       </FormField>
 
       <FormField id="device-protocol" label="Protocol" required :error="errorFor('protocol')" style="flex: 1">
         <template #default="{ describedBy, invalid }">
-          <input
-            id="device-protocol"
+          <AutoComplete
             v-model="form.protocol"
-            type="text"
-            required
-            maxlength="80"
-            list="protocol-suggestions"
+            input-id="device-protocol"
+            dropdown
+            complete-on-focus
+            :suggestions="filteredProtocolOptions"
+            style="width: 100%"
+            :input-style="{ width: '100%' }"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
-          <datalist id="protocol-suggestions">
-            <option v-for="option in protocolOptions" :key="option" :value="option" />
-          </datalist>
+            :invalid="invalid"
+            @complete="onProtocolComplete"
+          />
         </template>
       </FormField>
     </div>
@@ -164,27 +200,27 @@ async function onSubmit() {
     <div class="row" style="align-items: flex-start">
       <FormField id="device-manufacturer" label="Manufacturer" :error="errorFor('manufacturer')" style="flex: 1">
         <template #default="{ describedBy, invalid }">
-          <input
+          <InputText
             id="device-manufacturer"
             v-model="form.manufacturer"
-            type="text"
             maxlength="120"
+            style="width: 100%"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
+            :invalid="invalid"
+          />
         </template>
       </FormField>
 
       <FormField id="device-model" label="Model" :error="errorFor('model')" style="flex: 1">
         <template #default="{ describedBy, invalid }">
-          <input
+          <InputText
             id="device-model"
             v-model="form.model"
-            type="text"
             maxlength="120"
+            style="width: 100%"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
+            :invalid="invalid"
+          />
         </template>
       </FormField>
     </div>
@@ -197,27 +233,27 @@ async function onSubmit() {
         style="flex: 1"
       >
         <template #default="{ describedBy, invalid }">
-          <input
+          <InputText
             id="device-serial-number"
             v-model="form.serialNumber"
-            type="text"
             maxlength="160"
+            style="width: 100%"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
+            :invalid="invalid"
+          />
         </template>
       </FormField>
 
       <FormField id="device-ip-address" label="IP address" :error="errorFor('ipAddress')" style="flex: 1">
         <template #default="{ describedBy, invalid }">
-          <input
+          <InputText
             id="device-ip-address"
             v-model="form.ipAddress"
-            type="text"
             placeholder="192.168.1.10"
+            style="width: 100%"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
+            :invalid="invalid"
+          />
         </template>
       </FormField>
     </div>
@@ -236,20 +272,14 @@ async function onSubmit() {
 
     <fieldset>
       <legend>Location</legend>
-      <div class="radio-group" role="radiogroup" aria-required="true">
-        <div class="radio-option">
-          <input id="location-unassigned" v-model="form.locationState" type="radio" value="unassigned">
-          <label for="location-unassigned">Unassigned</label>
-        </div>
-        <div class="radio-option">
-          <input id="location-storage" v-model="form.locationState" type="radio" value="in_storage">
-          <label for="location-storage">In storage</label>
-        </div>
-        <div class="radio-option">
-          <input id="location-room" v-model="form.locationState" type="radio" value="in_room">
-          <label for="location-room">In room</label>
-        </div>
-      </div>
+      <SelectButton
+        v-model="form.locationState"
+        :options="locationOptions"
+        option-label="label"
+        option-value="value"
+        :allow-empty="false"
+        aria-label="Location"
+      />
 
       <FormField
         v-if="form.locationState === 'in_room'"
@@ -257,41 +287,43 @@ async function onSubmit() {
         label="Room"
         required
         :error="errorFor('roomId')"
+        style="margin-top: var(--space-4)"
       >
         <template #default="{ describedBy, invalid }">
-          <select
-            id="device-room"
+          <Select
             v-model="form.roomId"
-            required
+            input-id="device-room"
+            :options="roomGroups"
+            option-group-label="label"
+            option-group-children="items"
+            option-label="label"
+            option-value="value"
+            placeholder="Select a room"
+            style="width: 100%"
             :aria-describedby="describedBy"
-            :aria-invalid="invalid"
-          >
-            <option value="" disabled>Select a room</option>
-            <optgroup v-for="floor in floorsWithRooms" :key="floor.id" :label="floor.name">
-              <option v-for="room in floor.rooms" :key="room.id" :value="room.id">{{ room.name }}</option>
-            </optgroup>
-          </select>
+            :invalid="invalid"
+          />
         </template>
       </FormField>
     </fieldset>
 
     <FormField id="device-notes" label="Notes" :error="errorFor('notes')">
       <template #default="{ describedBy, invalid }">
-        <textarea
+        <Textarea
           id="device-notes"
           v-model="form.notes"
           maxlength="5000"
+          rows="4"
+          style="width: 100%"
           :aria-describedby="describedBy"
-          :aria-invalid="invalid"
+          :invalid="invalid"
         />
       </template>
     </FormField>
 
     <div class="row" style="justify-content: flex-end">
-      <button type="button" class="btn" @click="emit('cancel')">Cancel</button>
-      <button type="submit" class="btn btn-primary" :disabled="saving">
-        {{ saving ? 'Saving…' : 'Save device' }}
-      </button>
+      <Button type="button" label="Cancel" severity="secondary" outlined @click="emit('cancel')" />
+      <Button type="submit" :label="saving ? 'Saving…' : 'Save device'" :disabled="saving" />
     </div>
   </form>
 </template>

@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import Button from 'primevue/button'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
 import type { HomeSummaryDto } from '../../shared/types/domain'
 import { ApiRequestError } from '../composables/useApiClient'
 import { useHomesApi } from '../composables/useHomesApi'
 
 const homesApi = useHomesApi()
+const toast = useToast()
 
 const { data: homes, refresh, pending, error: loadError } = await useAsyncData('homes', () => homesApi.list())
 
@@ -37,6 +41,7 @@ async function confirmDelete(typedName: string) {
       version: deletingHome.value.version
     })
     closeDeleteDialog()
+    toast.add({ severity: 'success', summary: 'Home deleted', life: 3000 })
     await refresh()
   } catch (err) {
     deleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete home.'
@@ -56,17 +61,15 @@ function onSaved() {
   <div class="stack">
     <div class="row-between">
       <h1>Homes</h1>
-      <button type="button" class="btn btn-primary" @click="showCreateDialog = true">Add home</button>
+      <Button label="Add home" @click="showCreateDialog = true" />
     </div>
 
     <p v-if="pending">Loading homes…</p>
-    <p v-else-if="loadError" class="alert" role="alert">Failed to load homes.</p>
+    <Message v-else-if="loadError" severity="error">Failed to load homes.</Message>
 
     <div v-else-if="homes && homes.length === 0" class="empty-state">
       <p>You haven't added any homes yet.</p>
-      <button type="button" class="btn btn-primary" @click="showCreateDialog = true">
-        Create your first home
-      </button>
+      <Button label="Create your first home" @click="showCreateDialog = true" />
     </div>
 
     <ul v-else class="stack" style="list-style: none; padding: 0">
@@ -84,10 +87,14 @@ function onSaved() {
           </div>
           <div class="row">
             <NuxtLink :to="`/homes/${home.id}`" class="btn btn-small">Open</NuxtLink>
-            <button type="button" class="btn btn-small" @click="editingHome = home">Rename</button>
-            <button type="button" class="btn btn-small btn-danger" @click="openDeleteDialog(home)">
-              Delete
-            </button>
+            <Button label="Rename" size="small" severity="secondary" outlined @click="editingHome = home" />
+            <Button
+              label="Delete"
+              size="small"
+              severity="danger"
+              outlined
+              @click="openDeleteDialog(home)"
+            />
           </div>
         </div>
       </li>
@@ -118,7 +125,7 @@ function onSaved() {
         This includes {{ deletionImpact.floors }} floors, {{ deletionImpact.rooms }} rooms, and
         {{ deletionImpact.devices }} devices. This action cannot be undone.
       </p>
-      <p v-if="deleteError" class="alert" role="alert">{{ deleteError }}</p>
+      <Message v-if="deleteError" severity="error">{{ deleteError }}</Message>
     </ConfirmDialog>
   </div>
 </template>

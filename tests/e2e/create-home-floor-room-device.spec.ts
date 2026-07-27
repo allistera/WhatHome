@@ -29,12 +29,14 @@ test('creates a home, floor, room, and a room-assigned device', async ({ page })
 
   await page.getByRole('link', { name: 'View inventory' }).click()
   await page.getByRole('link', { name: 'Add device' }).click()
+  await expect(page.getByRole('heading', { name: 'Add device' })).toBeVisible()
 
   await page.getByLabel('Name').fill(deviceName)
   await page.getByLabel('Type').fill('Sensor')
   await page.getByLabel('Protocol').fill('Zigbee')
-  await page.getByLabel('In room').check()
-  await page.locator('#device-room').selectOption({ label: roomName })
+  await page.getByRole('button', { name: 'In room', exact: true }).click()
+  await page.locator('#device-room').click()
+  await page.getByRole('option', { name: roomName }).click()
   await page.getByRole('button', { name: 'Save device' }).click()
 
   await expect(page.getByRole('heading', { name: deviceName })).toBeVisible()

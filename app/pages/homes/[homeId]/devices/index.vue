@@ -2,13 +2,17 @@
 import { FilterMatchMode } from '@primevue/core/api'
 import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import { useToast } from 'primevue/usetoast'
 import type { DeviceLocationState, DeviceSortField } from '../../../../../shared/schemas/device'
+import type { DeviceDto } from '../../../../../shared/types/domain'
+import { ApiRequestError } from '../../../../composables/useApiClient'
 import { useDevicesApi } from '../../../../composables/useDevicesApi'
 import { useFloorsApi } from '../../../../composables/useFloorsApi'
 import { useRoomsApi } from '../../../../composables/useRoomsApi'
@@ -182,6 +186,43 @@ const showImportDialog = ref(false)
 function onImported() {
   refreshDevices()
 }
+
+const toast = useToast()
+const updatingPackaged = ref<Set<string>>(new Set())
+
+async function togglePackaged(device: DeviceDto, packaged: boolean) {
+  updatingPackaged.value.add(device.id)
+  try {
+    await devicesApi.update(device.id, {
+      name: device.name,
+      type: device.type,
+      protocol: device.protocol,
+      manufacturer: device.manufacturer,
+      model: device.model,
+      serialNumber: device.serialNumber,
+      ipAddress: device.ipAddress,
+      purchaseDate: device.purchaseDate,
+      notes: device.notes,
+      locationState: packaged ? 'in_storage' : 'unassigned',
+      roomId: null,
+      version: device.version
+    })
+    toast.add({
+      severity: 'success',
+      summary: packaged ? 'Marked as packaged' : 'Marked as unpackaged',
+      life: 2000
+    })
+    await refreshDevices()
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: err instanceof ApiRequestError ? err.message : 'Failed to update device',
+      life: 4000
+    })
+  } finally {
+    updatingPackaged.value.delete(device.id)
+  }
+}
 </script>
 
 <template>
@@ -192,7 +233,7 @@ function onImported() {
         <h1>Device inventory</h1>
       </div>
       <div class="row">
-        <button type="button" class="btn" @click="showImportDialog = true">Import CSV</button>
+        <Button label="Import CSV" severity="secondary" outlined @click="showImportDialog = true" />
         <NuxtLink :to="`/homes/${homeId}/devices/new`" class="btn btn-primary">Add device</NuxtLink>
       </div>
     </div>
@@ -342,6 +383,18 @@ function onImported() {
           </template>
         </Column>
 
+        <Column header="Packaged" style="width: 6rem">
+          <template #body="{ data }">
+            <Checkbox
+              :model-value="data.locationState === 'in_storage'"
+              binary
+              :disabled="updatingPackaged.has(data.id)"
+              :aria-label="`Mark ${data.name} as packaged`"
+              @update:model-value="(checked) => togglePackaged(data, checked as boolean)"
+            />
+          </template>
+        </Column>
+
         <Column field="ipAddress" header="IP address">
           <template #body="{ data }">{{ data.ipAddress ?? '—' }}</template>
         </Column>
@@ -356,7 +409,7 @@ function onImported() {
       <p v-if="pending">Loading devices…</p>
       <p v-else-if="!result || result.data.length === 0" class="empty-state">
         No devices match your search and filters.
-        <button type="button" class="btn" @click="clearFilters">Clear all filters</button>
+        <Button label="Clear all filters" size="small" severity="secondary" outlined @click="clearFilters" />
       </p>
       <template v-else>
         <ul class="device-cards" style="list-style: none; padding: 0">
@@ -376,27 +429,36 @@ function onImported() {
             </p>
             <p v-if="device.ipAddress" class="hint">IP: {{ device.ipAddress }}</p>
             <p v-if="device.purchaseDate" class="hint">Purchased: {{ device.purchaseDate }}</p>
+            <label class="row" style="align-items: center; gap: var(--space-2)">
+              <Checkbox
+                :model-value="device.locationState === 'in_storage'"
+                binary
+                :disabled="updatingPackaged.has(device.id)"
+                @update:model-value="(checked) => togglePackaged(device, checked as boolean)"
+              />
+              Packaged
+            </label>
           </li>
         </ul>
 
         <nav class="pagination" aria-label="Pagination">
-          <button
-            type="button"
-            class="btn btn-small"
+          <Button
+            label="Previous"
+            size="small"
+            severity="secondary"
+            outlined
             :disabled="result.page.number <= 1"
             @click="goToPage(result.page.number - 1)"
-          >
-            Previous
-          </button>
+          />
           <span>Page {{ result.page.number }} of {{ Math.max(result.page.totalPages, 1) }}</span>
-          <button
-            type="button"
-            class="btn btn-small"
+          <Button
+            label="Next"
+            size="small"
+            severity="secondary"
+            outlined
             :disabled="result.page.number >= result.page.totalPages"
             @click="goToPage(result.page.number + 1)"
-          >
-            Next
-          </button>
+          />
         </nav>
       </template>
     </div>

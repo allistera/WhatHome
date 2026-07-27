@@ -9,7 +9,7 @@ test('creates a device in storage', async ({ page, request }) => {
   await page.getByLabel('Name').fill(deviceName)
   await page.getByLabel('Type').fill('Router')
   await page.getByLabel('Protocol').fill('WiFi')
-  await page.getByLabel('In storage').check()
+  await page.getByRole('button', { name: 'In storage', exact: true }).click()
   await page.getByRole('button', { name: 'Save device' }).click()
 
   await expect(page.getByRole('heading', { name: deviceName })).toBeVisible()
@@ -24,7 +24,7 @@ test('creates an unassigned device', async ({ page, request }) => {
   await page.getByLabel('Name').fill(deviceName)
   await page.getByLabel('Type').fill('Light')
   await page.getByLabel('Protocol').fill('Zigbee')
-  // "Unassigned" is the default selection; no radio interaction needed.
+  // "Unassigned" is the default selection; no interaction needed.
   await page.getByRole('button', { name: 'Save device' }).click()
 
   await expect(page.getByRole('heading', { name: deviceName })).toBeVisible()

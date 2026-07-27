@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
 import type { DeviceImportColumn } from '../../shared/schemas/device-import'
 import type { DeviceImportSummary } from '../../shared/types/domain'
 import { apiGet, ApiRequestError } from '../composables/useApiClient'
@@ -14,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const devicesApi = useDevicesApi()
+const toast = useToast()
 
 const { data: columns } = await useAsyncData(
   'device-import-columns',
@@ -49,6 +54,11 @@ async function onImport() {
   try {
     summary.value = await devicesApi.importCsv(props.homeId, selectedFile.value)
     if (summary.value.created > 0) {
+      toast.add({
+        severity: summary.value.failed > 0 ? 'warn' : 'success',
+        summary: `${summary.value.created} of ${summary.value.totalRows} devices imported`,
+        life: 4000
+      })
       emit('imported')
     }
   } catch (err) {
@@ -78,6 +88,7 @@ async function confirmDeleteImported() {
     }
     confirmingDeleteImported.value = false
     importedDeleted.value = true
+    toast.add({ severity: 'success', summary: 'Imported devices deleted', life: 3000 })
     emit('imported')
   } catch (err) {
     deleteImportedError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete imported devices.'
@@ -85,13 +96,25 @@ async function confirmDeleteImported() {
     deletingImported.value = false
   }
 }
+
+function onVisibleChange(visible: boolean) {
+  if (!visible) emit('cancel')
+}
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="emit('cancel')">
-    <div class="modal stack" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" style="max-width: 40rem">
-      <h2 id="import-dialog-title">Import devices from CSV</h2>
+  <Dialog
+    :visible="true"
+    modal
+    dismissable-mask
+    :style="{ width: '40rem' }"
+    @update:visible="onVisibleChange"
+  >
+    <template #header="{ class: headerClass, headerId }">
+      <h2 :id="headerId" :class="headerClass">Import devices from CSV</h2>
+    </template>
 
+    <div class="stack">
       <div class="stack">
         <p class="hint">
           The first row must be a header row. Column names are matched flexibly (case and spacing don't
@@ -129,7 +152,7 @@ async function confirmDeleteImported() {
       </div>
 
       <div v-if="!summary" class="stack">
-        <p v-if="formError" class="alert" role="alert">{{ formError }}</p>
+        <Message v-if="formError" severity="error">{{ formError }}</Message>
 
         <div class="field">
           <label for="import-file">CSV file</label>
@@ -140,18 +163,6 @@ async function confirmDeleteImported() {
             accept=".csv,text/csv"
             @change="onFileChange"
           >
-        </div>
-
-        <div class="row" style="justify-content: flex-end">
-          <button type="button" class="btn" @click="emit('cancel')">Cancel</button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            :disabled="!selectedFile || importing"
-            @click="onImport"
-          >
-            {{ importing ? 'Importing…' : 'Import' }}
-          </button>
         </div>
       </div>
 
@@ -179,38 +190,50 @@ async function confirmDeleteImported() {
             did import instead of keeping a partial import.
           </p>
           <div>
-            <button type="button" class="btn btn-small btn-danger" @click="confirmingDeleteImported = true">
-              Delete {{ summary.created }} imported device(s)
-            </button>
+            <Button
+              :label="`Delete ${summary.created} imported device(s)`"
+              size="small"
+              severity="danger"
+              outlined
+              @click="confirmingDeleteImported = true"
+            />
           </div>
         </div>
         <p v-else-if="importedDeleted" class="hint">
           The successfully imported devices were deleted.
         </p>
-        <p v-if="deleteImportedError" class="alert" role="alert">{{ deleteImportedError }}</p>
-
-        <div class="row" style="justify-content: flex-end">
-          <button v-if="summary.failed > 0" type="button" class="btn" @click="reset">
-            Import another file
-          </button>
-          <button type="button" class="btn btn-primary" @click="emit('cancel')">Done</button>
-        </div>
+        <Message v-if="deleteImportedError" severity="error">{{ deleteImportedError }}</Message>
       </div>
     </div>
 
-    <ConfirmDialog
-      v-if="confirmingDeleteImported"
-      title="Delete imported devices"
-      danger
-      confirm-label="Delete devices"
-      :busy="deletingImported"
-      @cancel="confirmingDeleteImported = false"
-      @confirm="confirmDeleteImported"
-    >
-      <p>
-        Delete the <strong>{{ summary?.created }}</strong> device(s) that were successfully imported? This
-        action cannot be undone.
-      </p>
-    </ConfirmDialog>
-  </div>
+    <template #footer>
+      <template v-if="!summary">
+        <Button label="Cancel" severity="secondary" outlined @click="emit('cancel')" />
+        <Button
+          :label="importing ? 'Importing…' : 'Import'"
+          :disabled="!selectedFile || importing"
+          @click="onImport"
+        />
+      </template>
+      <template v-else>
+        <Button v-if="summary.failed > 0" label="Import another file" severity="secondary" outlined @click="reset" />
+        <Button label="Done" @click="emit('cancel')" />
+      </template>
+    </template>
+  </Dialog>
+
+  <ConfirmDialog
+    v-if="confirmingDeleteImported"
+    title="Delete imported devices"
+    danger
+    confirm-label="Delete devices"
+    :busy="deletingImported"
+    @cancel="confirmingDeleteImported = false"
+    @confirm="confirmDeleteImported"
+  >
+    <p>
+      Delete the <strong>{{ summary?.created }}</strong> device(s) that were successfully imported? This
+      action cannot be undone.
+    </p>
+  </ConfirmDialog>
 </template>

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Button from 'primevue/button'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
 import { ApiRequestError } from '../../../../composables/useApiClient'
 import { useDevicesApi } from '../../../../composables/useDevicesApi'
 import { useRoomsApi } from '../../../../composables/useRoomsApi'
@@ -10,6 +13,7 @@ const deviceId = route.params.deviceId as string
 
 const devicesApi = useDevicesApi()
 const roomsApi = useRoomsApi()
+const toast = useToast()
 
 const { data: device, refresh, error: loadError } = await useAsyncData(`device-${deviceId}`, () =>
   devicesApi.get(deviceId)
@@ -38,6 +42,7 @@ async function confirmDelete() {
   deleteError.value = ''
   try {
     await devicesApi.remove(device.value.id, device.value.version)
+    toast.add({ severity: 'success', summary: 'Device deleted', life: 3000 })
     router.push(`/homes/${homeId}/devices`)
   } catch (err) {
     deleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete device.'
@@ -65,8 +70,8 @@ function fmtDate(value: string | null) {
       <div class="row-between">
         <h1>{{ device.name }}</h1>
         <div class="row">
-          <button type="button" class="btn" @click="editing = true">Edit</button>
-          <button type="button" class="btn btn-danger" @click="deleting = true">Delete</button>
+          <Button label="Edit" severity="secondary" outlined @click="editing = true" />
+          <Button label="Delete" severity="danger" outlined @click="deleting = true" />
         </div>
       </div>
 
@@ -103,7 +108,7 @@ function fmtDate(value: string | null) {
       @confirm="confirmDelete"
     >
       <p>Delete <strong>{{ device.name }}</strong>? This action cannot be undone.</p>
-      <p v-if="deleteError" class="alert" role="alert">{{ deleteError }}</p>
+      <Message v-if="deleteError" severity="error">{{ deleteError }}</Message>
     </ConfirmDialog>
   </div>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Button from 'primevue/button'
 import { useFloorsApi } from '../composables/useFloorsApi'
 import { useHomesApi } from '../composables/useHomesApi'
 import { useRoomsApi } from '../composables/useRoomsApi'
@@ -134,14 +135,13 @@ function isActiveRoom(roomId: string) {
 
     <div class="app-content">
       <header class="app-topbar">
-        <button
-          type="button"
-          class="app-menu-button"
+        <Button
+          icon="pi pi-bars"
+          severity="secondary"
+          outlined
           aria-label="Open navigation"
           @click="sidebarOpen = true"
-        >
-          <span aria-hidden="true">☰</span>
-        </button>
+        />
         <NuxtLink to="/" style="font-weight: 800">WhatHome</NuxtLink>
       </header>
 

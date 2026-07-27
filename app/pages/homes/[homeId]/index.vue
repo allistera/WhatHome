@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Button from 'primevue/button'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
 import type { FloorDto, HomeDto, RoomDto } from '../../../../shared/types/domain'
 import { ApiRequestError } from '../../../composables/useApiClient'
 import { useFloorsApi } from '../../../composables/useFloorsApi'
@@ -12,6 +15,7 @@ const homeId = route.params.homeId as string
 const homesApi = useHomesApi()
 const floorsApi = useFloorsApi()
 const roomsApi = useRoomsApi()
+const toast = useToast()
 
 const { data: home, error: homeError } = await useAsyncData(`home-${homeId}`, () => homesApi.get(homeId))
 const { data: overview, refresh: refreshOverview } = await useAsyncData(
@@ -62,6 +66,7 @@ async function confirmDeleteHome(typedName: string) {
   homeDeleteError.value = ''
   try {
     await homesApi.remove(home.value.id, { name: typedName, version: home.value.version })
+    toast.add({ severity: 'success', summary: 'Home deleted', life: 3000 })
     router.push('/')
   } catch (err) {
     homeDeleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete home.'
@@ -91,6 +96,7 @@ async function confirmDeleteFloor() {
   try {
     await floorsApi.remove(deletingFloor.value.id, deletingFloor.value.version)
     deletingFloor.value = null
+    toast.add({ severity: 'success', summary: 'Floor deleted', life: 3000 })
     await refreshAll()
   } catch (err) {
     floorDeleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete floor.'
@@ -108,6 +114,7 @@ async function moveFloor(index: number, direction: -1 | 1) {
   const [moved] = reordered.splice(index, 1)
   reordered.splice(targetIndex, 0, moved!)
   await floorsApi.reorder(homeId, { floorIds: reordered.map((f) => f.id) })
+  toast.add({ severity: 'success', summary: 'Floor order updated', life: 2000 })
   await refreshFloors()
 }
 
@@ -132,6 +139,7 @@ async function confirmDeleteRoom() {
   try {
     await roomsApi.remove(deletingRoom.value.id, deletingRoom.value.version)
     deletingRoom.value = null
+    toast.add({ severity: 'success', summary: 'Room deleted', life: 3000 })
     await refreshAll()
   } catch (err) {
     roomDeleteError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete room.'
@@ -147,6 +155,7 @@ async function moveRoom(floor: FloorDto & { rooms: RoomDto[] }, index: number, d
   const [moved] = reordered.splice(index, 1)
   reordered.splice(targetIndex, 0, moved!)
   await roomsApi.reorder(floor.id, { roomIds: reordered.map((r) => r.id) })
+  toast.add({ severity: 'success', summary: 'Room order updated', life: 2000 })
   await refreshRooms()
 }
 
@@ -169,8 +178,8 @@ function onHomeSaved(updated: HomeDto) {
         <h1>{{ home.name }}</h1>
       </div>
       <div class="row">
-        <button type="button" class="btn" @click="editingHome = true">Rename</button>
-        <button type="button" class="btn btn-danger" @click="openDeleteHome">Delete home</button>
+        <Button label="Rename" severity="secondary" outlined @click="editingHome = true" />
+        <Button label="Delete home" severity="danger" outlined @click="openDeleteHome" />
       </div>
     </div>
 
@@ -191,7 +200,7 @@ function onHomeSaved(updated: HomeDto) {
     <section class="card stack" aria-labelledby="floors-heading">
       <div class="row-between">
         <h2 id="floors-heading">Floors &amp; rooms</h2>
-        <button type="button" class="btn btn-small" @click="addingFloor = true">Add floor</button>
+        <Button label="Add floor" size="small" @click="addingFloor = true" />
       </div>
 
       <p v-if="floorsWithRooms.length === 0" class="hint">
@@ -203,31 +212,27 @@ function onHomeSaved(updated: HomeDto) {
           <div class="row-between">
             <h3 style="margin: 0">{{ floor.name }}</h3>
             <div class="row">
-              <button
-                type="button"
-                class="btn btn-small"
+              <Button
+                icon="pi pi-arrow-up"
+                size="small"
+                severity="secondary"
+                outlined
                 :disabled="floorIndex === 0"
                 aria-label="Move floor up"
                 @click="moveFloor(floorIndex, -1)"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                class="btn btn-small"
+              />
+              <Button
+                icon="pi pi-arrow-down"
+                size="small"
+                severity="secondary"
+                outlined
                 :disabled="floorIndex === floorsWithRooms.length - 1"
                 aria-label="Move floor down"
                 @click="moveFloor(floorIndex, 1)"
-              >
-                ↓
-              </button>
-              <button type="button" class="btn btn-small" @click="editingFloor = floor">Rename</button>
-              <button type="button" class="btn btn-small" @click="addingRoomForFloor = floor">
-                Add room
-              </button>
-              <button type="button" class="btn btn-small btn-danger" @click="openDeleteFloor(floor)">
-                Delete
-              </button>
+              />
+              <Button label="Rename" size="small" severity="secondary" outlined @click="editingFloor = floor" />
+              <Button label="Add room" size="small" severity="secondary" outlined @click="addingRoomForFloor = floor" />
+              <Button label="Delete" size="small" severity="danger" outlined @click="openDeleteFloor(floor)" />
             </div>
           </div>
 
@@ -242,28 +247,26 @@ function onHomeSaved(updated: HomeDto) {
             <li v-for="(room, roomIndex) in floor.rooms" :key="room.id" class="row-between">
               <NuxtLink :to="`/homes/${homeId}/devices?roomId=${room.id}`">{{ room.name }}</NuxtLink>
               <div class="row">
-                <button
-                  type="button"
-                  class="btn btn-small"
+                <Button
+                  icon="pi pi-arrow-up"
+                  size="small"
+                  severity="secondary"
+                  outlined
                   :disabled="roomIndex === 0"
                   aria-label="Move room up"
                   @click="moveRoom(floor, roomIndex, -1)"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-small"
+                />
+                <Button
+                  icon="pi pi-arrow-down"
+                  size="small"
+                  severity="secondary"
+                  outlined
                   :disabled="roomIndex === floor.rooms.length - 1"
                   aria-label="Move room down"
                   @click="moveRoom(floor, roomIndex, 1)"
-                >
-                  ↓
-                </button>
-                <button type="button" class="btn btn-small" @click="editingRoom = room">Rename</button>
-                <button type="button" class="btn btn-small btn-danger" @click="openDeleteRoom(room)">
-                  Delete
-                </button>
+                />
+                <Button label="Rename" size="small" severity="secondary" outlined @click="editingRoom = room" />
+                <Button label="Delete" size="small" severity="danger" outlined @click="openDeleteRoom(room)" />
               </div>
             </li>
           </ul>
@@ -299,7 +302,7 @@ function onHomeSaved(updated: HomeDto) {
         This includes {{ homeDeletionImpact.floors }} floors, {{ homeDeletionImpact.rooms }} rooms, and
         {{ homeDeletionImpact.devices }} devices. This action cannot be undone.
       </p>
-      <p v-if="homeDeleteError" class="alert" role="alert">{{ homeDeleteError }}</p>
+      <Message v-if="homeDeleteError" severity="error">{{ homeDeleteError }}</Message>
     </ConfirmDialog>
 
     <!-- Floor dialogs -->
@@ -333,7 +336,7 @@ function onHomeSaved(updated: HomeDto) {
         This will delete {{ floorDeletionImpact.roomCount }} rooms. {{ floorDeletionImpact.deviceCount }}
         devices will become unassigned.
       </p>
-      <p v-if="floorDeleteError" class="alert" role="alert">{{ floorDeleteError }}</p>
+      <Message v-if="floorDeleteError" severity="error">{{ floorDeleteError }}</Message>
     </ConfirmDialog>
 
     <!-- Room dialogs -->
@@ -366,7 +369,7 @@ function onHomeSaved(updated: HomeDto) {
       <p v-if="roomDeletionImpact">
         {{ roomDeletionImpact.deviceCount }} devices will become unassigned.
       </p>
-      <p v-if="roomDeleteError" class="alert" role="alert">{{ roomDeleteError }}</p>
+      <Message v-if="roomDeleteError" severity="error">{{ roomDeleteError }}</Message>
     </ConfirmDialog>
   </div>
 </template>

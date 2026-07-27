@@ -25,6 +25,10 @@ const selectedFile = ref<File | null>(null)
 const importing = ref(false)
 const formError = ref('')
 const summary = ref<DeviceImportSummary | null>(null)
+const confirmingDeleteImported = ref(false)
+const deletingImported = ref(false)
+const deleteImportedError = ref('')
+const importedDeleted = ref(false)
 
 onMounted(() => {
   nextTick(() => fileInput.value?.focus())
@@ -58,7 +62,28 @@ function reset() {
   selectedFile.value = null
   summary.value = null
   formError.value = ''
+  importedDeleted.value = false
   if (fileInput.value) fileInput.value.value = ''
+}
+
+async function confirmDeleteImported() {
+  if (!summary.value) return
+  deletingImported.value = true
+  deleteImportedError.value = ''
+  try {
+    for (const result of summary.value.results) {
+      if (result.status === 'created' && result.device) {
+        await devicesApi.remove(result.device.id, result.device.version)
+      }
+    }
+    confirmingDeleteImported.value = false
+    importedDeleted.value = true
+    emit('imported')
+  } catch (err) {
+    deleteImportedError.value = err instanceof ApiRequestError ? err.message : 'Failed to delete imported devices.'
+  } finally {
+    deletingImported.value = false
+  }
 }
 </script>
 
@@ -148,6 +173,22 @@ function reset() {
           </li>
         </ul>
 
+        <div v-if="summary.failed > 0 && summary.created > 0 && !importedDeleted" class="stack">
+          <p class="hint">
+            If you'd rather fix the file and re-import everything at once, you can delete the devices that
+            did import instead of keeping a partial import.
+          </p>
+          <div>
+            <button type="button" class="btn btn-small btn-danger" @click="confirmingDeleteImported = true">
+              Delete {{ summary.created }} imported device(s)
+            </button>
+          </div>
+        </div>
+        <p v-else-if="importedDeleted" class="hint">
+          The successfully imported devices were deleted.
+        </p>
+        <p v-if="deleteImportedError" class="alert" role="alert">{{ deleteImportedError }}</p>
+
         <div class="row" style="justify-content: flex-end">
           <button v-if="summary.failed > 0" type="button" class="btn" @click="reset">
             Import another file
@@ -156,5 +197,20 @@ function reset() {
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      v-if="confirmingDeleteImported"
+      title="Delete imported devices"
+      danger
+      confirm-label="Delete devices"
+      :busy="deletingImported"
+      @cancel="confirmingDeleteImported = false"
+      @confirm="confirmDeleteImported"
+    >
+      <p>
+        Delete the <strong>{{ summary?.created }}</strong> device(s) that were successfully imported? This
+        action cannot be undone.
+      </p>
+    </ConfirmDialog>
   </div>
 </template>

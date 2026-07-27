@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { DataTablePageEvent, DataTableSortEvent } from 'primevue/datatable'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
 import type { DeviceLocationState, DeviceSortField } from '../../../../../shared/schemas/device'
 import type { DeviceFilterState } from '../../../../components/DeviceFilters.vue'
 import { useDevicesApi } from '../../../../composables/useDevicesApi'
@@ -89,18 +92,17 @@ function clearFilters() {
   syncQuery()
 }
 
-function toggleSort(field: DeviceSortField) {
-  if (sort.value === field) {
-    order.value = order.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sort.value = field
-    order.value = 'asc'
-  }
+function onSort(event: DataTableSortEvent) {
+  const field = event.sortField as DeviceSortField | undefined
+  if (!field) return
+  sort.value = field
+  order.value = event.sortOrder === -1 ? 'desc' : 'asc'
+  page.value = 1
   syncQuery()
 }
 
-function goToPage(next: number) {
-  page.value = next
+function onPage(event: DataTablePageEvent) {
+  page.value = event.page + 1
   syncQuery()
 }
 
@@ -133,18 +135,6 @@ function onImported() {
   refreshDevices()
 }
 
-const sortLabels: Record<DeviceSortField, string> = {
-  name: 'Name',
-  purchaseDate: 'Purchase date',
-  manufacturer: 'Manufacturer',
-  type: 'Type',
-  updatedAt: 'Last updated'
-}
-
-function ariaSortFor(field: DeviceSortField): 'ascending' | 'descending' | 'none' {
-  if (sort.value !== field) return 'none'
-  return order.value === 'asc' ? 'ascending' : 'descending'
-}
 </script>
 
 <template>
@@ -180,54 +170,49 @@ function ariaSortFor(field: DeviceSortField): 'ascending' | 'descending' | 'none
 
     <template v-else>
       <div class="table-scroll device-table-wrap">
-        <table>
-          <caption class="visually-hidden">Device inventory</caption>
-          <thead>
-            <tr>
-              <th scope="col" :aria-sort="ariaSortFor('name')">
-                <button type="button" @click="toggleSort('name')">
-                  {{ sortLabels.name }} <span aria-hidden="true">{{ sort === 'name' ? (order === 'asc' ? '▲' : '▼') : '' }}</span>
-                </button>
-              </th>
-              <th scope="col" :aria-sort="ariaSortFor('type')">
-                <button type="button" @click="toggleSort('type')">
-                  {{ sortLabels.type }} <span aria-hidden="true">{{ sort === 'type' ? (order === 'asc' ? '▲' : '▼') : '' }}</span>
-                </button>
-              </th>
-              <th scope="col">Protocol</th>
-              <th scope="col" :aria-sort="ariaSortFor('manufacturer')">
-                <button type="button" @click="toggleSort('manufacturer')">
-                  Manufacturer / model
-                  <span aria-hidden="true">{{ sort === 'manufacturer' ? (order === 'asc' ? '▲' : '▼') : '' }}</span>
-                </button>
-              </th>
-              <th scope="col">Location</th>
-              <th scope="col">IP address</th>
-              <th scope="col" :aria-sort="ariaSortFor('purchaseDate')">
-                <button type="button" @click="toggleSort('purchaseDate')">
-                  Purchase date
-                  <span aria-hidden="true">{{ sort === 'purchaseDate' ? (order === 'asc' ? '▲' : '▼') : '' }}</span>
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="device in result.data" :key="device.id">
-              <td><NuxtLink :to="`/homes/${homeId}/devices/${device.id}`">{{ device.name }}</NuxtLink></td>
-              <td>{{ device.type }}</td>
-              <td>{{ device.protocol }}</td>
-              <td>{{ [device.manufacturer, device.model].filter(Boolean).join(' / ') || '—' }}</td>
-              <td>
-                <LocationBadge
-                  :state="device.locationState"
-                  :room-name="device.roomId ? roomNameById.get(device.roomId) : null"
-                />
-              </td>
-              <td>{{ device.ipAddress ?? '—' }}</td>
-              <td>{{ device.purchaseDate ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <DataTable
+          :value="result.data"
+          data-key="id"
+          lazy
+          paginator
+          :rows="result.page.size"
+          :total-records="result.page.totalItems"
+          :first="(result.page.number - 1) * result.page.size"
+          :sort-field="sort"
+          :sort-order="order === 'asc' ? 1 : -1"
+          @page="onPage"
+          @sort="onSort"
+        >
+          <template #paginatorstart>
+            Page {{ result.page.number }} of {{ Math.max(result.page.totalPages, 1) }}
+          </template>
+          <Column field="name" header="Name" sortable>
+            <template #body="{ data }">
+              <NuxtLink :to="`/homes/${homeId}/devices/${data.id}`">{{ data.name }}</NuxtLink>
+            </template>
+          </Column>
+          <Column field="type" header="Type" sortable />
+          <Column field="protocol" header="Protocol" />
+          <Column field="manufacturer" header="Manufacturer / model" sortable>
+            <template #body="{ data }">
+              {{ [data.manufacturer, data.model].filter(Boolean).join(' / ') || '—' }}
+            </template>
+          </Column>
+          <Column header="Location">
+            <template #body="{ data }">
+              <LocationBadge
+                :state="data.locationState"
+                :room-name="data.roomId ? roomNameById.get(data.roomId) : null"
+              />
+            </template>
+          </Column>
+          <Column field="ipAddress" header="IP address">
+            <template #body="{ data }">{{ data.ipAddress ?? '—' }}</template>
+          </Column>
+          <Column field="purchaseDate" header="Purchase date" sortable>
+            <template #body="{ data }">{{ data.purchaseDate ?? '—' }}</template>
+          </Column>
+        </DataTable>
       </div>
 
       <ul class="device-cards" style="list-style: none; padding: 0">
@@ -249,26 +234,6 @@ function ariaSortFor(field: DeviceSortField): 'ascending' | 'descending' | 'none
           <p v-if="device.purchaseDate" class="hint">Purchased: {{ device.purchaseDate }}</p>
         </li>
       </ul>
-
-      <nav class="pagination" aria-label="Pagination">
-        <button
-          type="button"
-          class="btn btn-small"
-          :disabled="result.page.number <= 1"
-          @click="goToPage(result.page.number - 1)"
-        >
-          Previous
-        </button>
-        <span>Page {{ result.page.number }} of {{ Math.max(result.page.totalPages, 1) }}</span>
-        <button
-          type="button"
-          class="btn btn-small"
-          :disabled="result.page.number >= result.page.totalPages"
-          @click="goToPage(result.page.number + 1)"
-        >
-          Next
-        </button>
-      </nav>
     </template>
 
     <DeviceImportDialog

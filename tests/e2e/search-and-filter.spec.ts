@@ -29,7 +29,8 @@ test('searches and filters the device inventory', async ({ page, request }) => {
   await page.getByRole('button', { name: 'Clear all filters' }).click()
   await expect(page.getByRole('link', { name: 'Front Door Lock' })).toBeVisible()
 
-  await page.getByLabel('Type').selectOption({ label: 'Lock' })
+  await page.locator('#filter-type').click()
+  await page.getByRole('option', { name: 'Lock' }).click()
   await page.waitForTimeout(400)
   await expect(page.getByRole('link', { name: 'Front Door Lock' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Fridge Sensor' })).not.toBeVisible()

@@ -76,6 +76,17 @@ describe('room service integration', () => {
     expect(reordered.find((r) => r.id === first.id)?.position).toBe(1)
   })
 
+  it('rejects a reorder containing duplicate room IDs', async () => {
+    const home = await createHome({ name: 'Beach House' })
+    const floor = await createFloor(home.id, { name: 'Ground Floor' })
+    const first = await createRoom(floor.id, { name: 'Kitchen' })
+    await createRoom(floor.id, { name: 'Living Room' })
+
+    await expect(
+      reorderRooms(floor.id, { roomIds: [first.id, first.id] })
+    ).rejects.toBeInstanceOf(ValidationError)
+  })
+
   it('reports the device count before deletion', async () => {
     const home = await createHome({ name: 'Beach House' })
     const floor = await createFloor(home.id, { name: 'Ground Floor' })

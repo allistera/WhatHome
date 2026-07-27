@@ -11,7 +11,12 @@ export const updateRoomSchema = z.object({
 })
 
 export const reorderRoomsSchema = z.object({
-  roomIds: z.array(uuidSchema).min(1)
+  roomIds: z
+    .array(uuidSchema)
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: 'Each room must appear exactly once.'
+    })
 })
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>

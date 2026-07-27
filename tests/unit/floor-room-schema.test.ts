@@ -33,6 +33,10 @@ describe('reorderFloorsSchema', () => {
   it('rejects a list containing a non-UUID value', () => {
     expect(reorderFloorsSchema.safeParse({ floorIds: [validId, 'nope'] }).success).toBe(false)
   })
+
+  it('rejects duplicate floor IDs', () => {
+    expect(reorderFloorsSchema.safeParse({ floorIds: [validId, validId] }).success).toBe(false)
+  })
 })
 
 describe('createRoomSchema', () => {
@@ -62,5 +66,9 @@ describe('reorderRoomsSchema', () => {
 
   it('rejects an empty list', () => {
     expect(reorderRoomsSchema.safeParse({ roomIds: [] }).success).toBe(false)
+  })
+
+  it('rejects duplicate room IDs', () => {
+    expect(reorderRoomsSchema.safeParse({ roomIds: [validId, validId] }).success).toBe(false)
   })
 })

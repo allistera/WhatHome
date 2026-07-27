@@ -106,6 +106,7 @@ export async function reorderFloors(homeId: string, input: ReorderFloorsInput) {
 
   if (
     input.floorIds.length !== existingFloors.length ||
+    new Set(input.floorIds).size !== input.floorIds.length ||
     !input.floorIds.every((id) => existingIds.has(id))
   ) {
     throw new ValidationError({ floorIds: ['The floor list must include every floor in this home exactly once.'] })

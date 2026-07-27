@@ -11,7 +11,12 @@ export const updateFloorSchema = z.object({
 })
 
 export const reorderFloorsSchema = z.object({
-  floorIds: z.array(uuidSchema).min(1)
+  floorIds: z
+    .array(uuidSchema)
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: 'Each floor must appear exactly once.'
+    })
 })
 
 export type CreateFloorInput = z.infer<typeof createFloorSchema>

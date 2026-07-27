@@ -10,7 +10,7 @@ import {
 } from '../../server/services/floor.service'
 import { createHome } from '../../server/services/home.service'
 import { createRoom } from '../../server/services/room.service'
-import { ConflictError, DuplicateNameError } from '../../server/utils/errors'
+import { ConflictError, DuplicateNameError, ValidationError } from '../../server/utils/errors'
 
 beforeAll(async () => {
   await ensureMigrated()
@@ -71,6 +71,16 @@ describe('floor service integration', () => {
     const reordered = await reorderFloors(home.id, { floorIds: [second.id, first.id] })
     expect(reordered.find((f) => f.id === second.id)?.position).toBe(0)
     expect(reordered.find((f) => f.id === first.id)?.position).toBe(1)
+  })
+
+  it('rejects a reorder containing duplicate floor IDs', async () => {
+    const home = await createHome({ name: 'Beach House' })
+    const first = await createFloor(home.id, { name: 'Ground Floor' })
+    await createFloor(home.id, { name: 'First Floor' })
+
+    await expect(
+      reorderFloors(home.id, { floorIds: [first.id, first.id] })
+    ).rejects.toBeInstanceOf(ValidationError)
   })
 
   it('reports rooms and device counts before deletion', async () => {

@@ -1,6 +1,6 @@
 # WhatHome
 
-A self-hosted home device inventory application. Track devices across one or more homes, organized by floor and room, with search, filtering, and CSV import. See `SPEC.md` for the full product specification.
+A self-hosted home device inventory application. Track devices across one or more homes, organized by floor and room, with search, filtering, and CSV import.
 
 Devices can be bulk-created from a CSV file on the inventory page ("Import CSV"). The dialog shows the required and optional columns, offers a template download, and matches headers flexibly (case/spacing-insensitive, with common aliases like "Brand" for Manufacturer). Each row is validated independently, so a file with some invalid rows still imports the valid ones and reports exactly what's wrong with the rest.
 
@@ -92,6 +92,7 @@ The Docker image applies pending migrations automatically on container start, be
 
 ```bash
 npm run lint          # ESLint
+npm run format:check  # Prettier formatting check
 npm run typecheck     # nuxt typecheck (vue-tsc)
 npm run test:unit     # Vitest unit tests
 npm run test:integration  # Vitest integration tests (needs a real Postgres database)
@@ -101,7 +102,7 @@ npm run build         # production build
 
 ## Project structure
 
-See `SPEC.md` section 13 for the intended layout. In short:
+The main source areas are:
 
 - `app/` — Vue pages, components, composables, layouts (Nuxt 4 `srcDir`).
 - `server/` — Nitro API routes, database schema/client, repositories, services, utilities.

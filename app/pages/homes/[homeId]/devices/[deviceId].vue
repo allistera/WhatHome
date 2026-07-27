@@ -20,7 +20,11 @@ const { data: device, refresh, error: loadError } = await useAsyncData(`device-$
 )
 const { data: rooms } = await useAsyncData(`device-detail-rooms-${homeId}`, () => roomsApi.listForHome(homeId))
 
-const notFound = computed(() => loadError.value instanceof ApiRequestError && loadError.value.status === 404)
+const notFound = computed(
+  () =>
+    (loadError.value instanceof ApiRequestError && loadError.value.status === 404) ||
+    (device.value !== undefined && device.value !== null && device.value.homeId !== homeId)
+)
 const roomName = computed(() => {
   if (!device.value?.roomId) return null
   return rooms.value?.find((room) => room.id === device.value!.roomId)?.name ?? null

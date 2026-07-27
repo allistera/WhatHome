@@ -8,6 +8,10 @@ services:
       - "${APP_PORT:-3000}:3000"
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # @primevue/nuxt-module reads this specific runtime-config env var at server
+      # startup (no rebuild needed); the value baked in at `docker build` time is
+      # always empty since .env is excluded from the build context.
+      NUXT_PUBLIC_PRIMEUI_LICENSE: ${PRIMEVUE_LICENSE_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

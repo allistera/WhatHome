@@ -46,6 +46,9 @@
     "unrs-resolver@1.12.2": true,
     "fsevents@2.3.2": true
   },
+  "overrides": {
+    "brace-expansion": "5.0.8"
+  },
   "devDependencies": {
     "@nuxt/eslint": "^1.16.0",
     "@nuxt/test-utils": "^4.0.3",

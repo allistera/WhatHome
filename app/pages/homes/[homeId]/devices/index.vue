@@ -90,6 +90,32 @@ const sort = ref<DeviceSortField>((queryParam('sort') as DeviceSortField) || 'na
 const order = ref<'asc' | 'desc'>((queryParam('order') as 'asc' | 'desc') || 'asc')
 const page = ref(Number(queryParam('page')) || 1)
 
+let applyingRouteQuery = false
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(
+  () => route.query,
+  () => {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    applyingRouteQuery = true
+
+    filters.value.global.value = queryParam('search') || null
+    filters.value.type.value = queryParam('type') || null
+    filters.value.protocol.value = queryParam('protocol') || null
+    filters.value.manufacturer.value = queryParam('manufacturer') || null
+    filters.value.locationState.value = queryParam('locationState') || null
+    filters.value.floorId.value = queryParam('floorId') || null
+    filters.value.roomId.value = queryParam('roomId') || null
+    sort.value = (queryParam('sort') as DeviceSortField) || 'name'
+    order.value = (queryParam('order') as 'asc' | 'desc') || 'asc'
+    page.value = Number(queryParam('page')) || 1
+
+    nextTick(() => {
+      applyingRouteQuery = false
+    })
+  }
+)
+
 function syncQuery() {
   const query: Record<string, string> = {}
   if (filters.value.global.value) query.search = filters.value.global.value
@@ -105,7 +131,6 @@ function syncQuery() {
   router.replace({ query })
 }
 
-let debounceTimer: ReturnType<typeof setTimeout> | undefined
 function scheduleSync() {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(syncQuery, 300)
@@ -114,6 +139,7 @@ function scheduleSync() {
 watch(
   filters,
   () => {
+    if (applyingRouteQuery) return
     page.value = 1
     scheduleSync()
   },

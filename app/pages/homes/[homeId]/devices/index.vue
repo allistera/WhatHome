@@ -32,9 +32,6 @@ const { data: rooms } = await useAsyncData(`inv-rooms-${homeId}`, () =>
 const { data: typeOptions } = await useAsyncData(`inv-types-${homeId}`, () =>
   devicesApi.suggestions.types(homeId)
 )
-const { data: protocolOptions } = await useAsyncData(`inv-protocols-${homeId}`, () =>
-  devicesApi.suggestions.protocols(homeId)
-)
 const { data: manufacturerOptions } = await useAsyncData(`inv-manufacturers-${homeId}`, () =>
   devicesApi.suggestions.manufacturers(homeId)
 )
@@ -360,29 +357,9 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
           </template>
         </Column>
 
-        <Column header="Protocol" filter-field="protocol" :show-filter-menu="false">
-          <template #body="{ data }">{{ data.protocol }}</template>
-          <template #filter="{ filterModel, filterCallback }">
-            <Select
-              v-model="filterModel.value"
-              input-id="filter-protocol"
-              :options="protocolOptions ?? []"
-              placeholder="Any protocol"
-              size="small"
-              show-clear
-              @change="filterCallback()"
-            />
-          </template>
-        </Column>
-
-        <Column
-          header="Manufacturer / model"
-          sortable
-          field="manufacturer"
-          :show-filter-menu="false"
-        >
+        <Column header="Manufacturer" sortable field="manufacturer" :show-filter-menu="false">
           <template #body="{ data }">
-            {{ [data.manufacturer, data.model].filter(Boolean).join(' / ') || '—' }}
+            {{ data.manufacturer || '—' }}
           </template>
           <template #filter="{ filterModel, filterCallback }">
             <Select
@@ -451,14 +428,6 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
             />
           </template>
         </Column>
-
-        <Column field="ipAddress" header="IP address">
-          <template #body="{ data }">{{ data.ipAddress ?? '—' }}</template>
-        </Column>
-
-        <Column field="purchaseDate" header="Purchase date" sortable>
-          <template #body="{ data }">{{ data.purchaseDate ?? '—' }}</template>
-        </Column>
       </DataTable>
     </div>
 
@@ -486,12 +455,8 @@ async function togglePackaged(device: DeviceDto, packaged: boolean) {
                 :room-name="device.roomId ? roomNameById.get(device.roomId) : null"
               />
             </div>
-            <p class="hint">{{ device.type }} · {{ device.protocol }}</p>
-            <p v-if="device.manufacturer || device.model" class="hint">
-              {{ [device.manufacturer, device.model].filter(Boolean).join(' / ') }}
-            </p>
-            <p v-if="device.ipAddress" class="hint">IP: {{ device.ipAddress }}</p>
-            <p v-if="device.purchaseDate" class="hint">Purchased: {{ device.purchaseDate }}</p>
+            <p class="hint">{{ device.type }}</p>
+            <p v-if="device.manufacturer" class="hint">{{ device.manufacturer }}</p>
             <label class="row" style="align-items: center; gap: var(--space-2)">
               <Checkbox
                 :model-value="device.locationState === 'in_storage'"

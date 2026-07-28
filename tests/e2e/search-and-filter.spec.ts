@@ -47,6 +47,28 @@ test('searches and filters the device inventory', async ({ page, request }) => {
   await expect(page.getByRole('link', { name: 'Front Door Lock' })).toBeVisible()
 })
 
+test('shows only the default device inventory columns', async ({ page, request }) => {
+  const home = await apiCreateHome(request, uniqueName('Default Columns Home'))
+
+  await apiCreateDevice(request, home.id, {
+    ...baseDevicePayload,
+    name: 'Kitchen Sensor',
+    manufacturer: 'Acme',
+    model: 'Model One',
+    ipAddress: '192.168.1.10',
+    purchaseDate: '2026-07-28'
+  })
+
+  await page.goto(`/homes/${home.id}/devices`)
+
+  const columnHeaders = page.locator('.device-table-wrap thead tr:first-child th')
+  await expect(columnHeaders).toHaveCount(5)
+  await expect(columnHeaders).toHaveText([/Name/, /Type/, /Manufacturer/, /Location/, /Packaged/])
+  await expect(page.getByText('Model One', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('192.168.1.10', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('2026-07-28', { exact: true })).toHaveCount(0)
+})
+
 test('filters the device inventory when a room is selected in the sidebar', async ({
   page,
   request
